@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User, Resource, Tag, Rating, Comment
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin):
+class UserAdmins(BaseUserAdmin):
     list_display = ['username', 'name', 'email', 'university_name', 'role', 'date_joined']
     list_filter = ['role', 'university_name']
     fieldsets = BaseUserAdmin.fieldsets + (
