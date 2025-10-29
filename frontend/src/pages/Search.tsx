@@ -4,6 +4,9 @@ import { Resource } from '../types';
 import api from '../utils/api';
 import { MagnifyingGlassIcon, StarIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid';
+import Loader from '../components/Loader';
+import EmptyState from '../components/EmptyState';
+import FileViewer from '../components/FileViewer';
 
 const Search: React.FC = () => {
   const [resources, setResources] = useState<Resource[]>([]);
@@ -30,7 +33,7 @@ const Search: React.FC = () => {
       });
 
       const response = await api.get(`/search/?${params.toString()}`);
-      setResources(response.data);
+      setResources(response.data.results || response.data);
     } catch (error) {
       console.error('Error fetching resources:', error);
     } finally {
@@ -56,24 +59,26 @@ const Search: React.FC = () => {
   };
 
   const ResourceCard: React.FC<{ resource: Resource }> = ({ resource }) => (
-    <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow border border-gray-200">
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="text-lg font-semibold text-gray-800 flex-1">
-          <Link to={`/resources/${resource.id}`} className="hover:text-gray-600">
-            {resource.title}
-          </Link>
-        </h3>
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1">
-            <StarIcon className="h-4 w-4 text-yellow-400" />
-            <span className="text-sm text-gray-600">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all border border-gray-200 dark:border-gray-700 overflow-hidden">
+      {/* File Preview Thumbnail */}
+      <div className="h-32 relative">
+        <FileViewer
+          fileUrl={resource.file}
+          fileName={resource.file.split('/').pop() || 'Unknown file'}
+          resourceId={resource.id}
+          className="w-full h-full"
+        />
+        <div className="absolute top-2 right-2 flex items-center space-x-2">
+          <div className="bg-black bg-opacity-70 text-white px-2 py-1 rounded-lg flex items-center space-x-1">
+            <StarIcon className="h-3 w-3 text-yellow-400" />
+            <span className="text-xs font-medium">
               {resource.average_rating.toFixed(1)}
             </span>
           </div>
           <a
             href={`http://localhost:8000/api/resources/${resource.id}/download/`}
             download={resource.title}
-            className="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-lg transition-all"
+            className="bg-black bg-opacity-70 hover:bg-opacity-90 text-white p-2 rounded-lg transition-all"
             title="Download file"
           >
             <ArrowDownTrayIcon className="h-4 w-4" />
@@ -81,42 +86,51 @@ const Search: React.FC = () => {
         </div>
       </div>
       
-      <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
-        {resource.description}
-      </p>
-      
-      <div className="flex flex-wrap gap-2 mb-4">
-        <span className="bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 px-2 py-1 rounded-full text-xs">
-          {resource.subject}
-        </span>
-        <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full text-xs">
-          {resource.topic}
-        </span>
-        <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-full text-xs">
-          {resource.course_code}
-        </span>
-      </div>
-      
-      <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-        <span>by {resource.uploader.name}</span>
-        <span>{new Date(resource.upload_date).toLocaleDateString()}</span>
-      </div>
-      
-      {resource.tags.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1">
-          {resource.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag.id}
-              className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded text-xs"
-            >
-              #{tag.name}
-            </span>
-          ))}
-          {resource.tags.length > 3 && (
-            <span className="text-xs text-gray-500">+{resource.tags.length - 3} more</span>
-          )}
+      {/* Card Content */}
+      <div className="p-6">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+          <Link to={`/resources/${resource.id}`} className="hover:text-gray-600 dark:hover:text-gray-300">
+            {resource.title}
+          </Link>
+        </h3>
+        
+        <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
+          {resource.description}
+        </p>
+        
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 px-2 py-1 rounded-full text-xs">
+            {resource.subject}
+          </span>
+          <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full text-xs">
+            {resource.topic}
+          </span>
+          <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-full text-xs">
+            {resource.course_code}
+          </span>
         </div>
-      )}
+        
+        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
+          <span>by {resource.uploader.name}</span>
+          <span>{new Date(resource.upload_date).toLocaleDateString()}</span>
+        </div>
+        
+        {resource.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {resource.tags.slice(0, 3).map((tag) => (
+              <span
+                key={tag.id}
+                className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded text-xs"
+              >
+                #{tag.name}
+              </span>
+            ))}
+            {resource.tags.length > 3 && (
+              <span className="text-xs text-gray-500">+{resource.tags.length - 3} more</span>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -215,14 +229,12 @@ const Search: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {loading ? 'Searching...' : `${resources.length} resources found`}
+            {loading ? 'Searching...' : `${resources?.length || 0} resources found`}
           </h2>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
+          <Loader size="md" text="Searching resources..." />
         ) : resources.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {resources.map((resource) => (
@@ -230,15 +242,7 @@ const Search: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <MagnifyingGlassIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No resources found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              Try adjusting your search terms or filters
-            </p>
-          </div>
+          <EmptyState type="search" />
         )}
       </div>
     </div>

@@ -4,14 +4,15 @@ import { BookOpenIcon, ShareIcon, MagnifyingGlassIcon } from '@heroicons/react/2
 
 const Landing: React.FC = () => {
   return (
-    <div className="bg-white dark:bg-gray-900">
+    <div className="bg-gradient-to-br from-gray-50 via-white to-primary-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 min-h-screen">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="text-center">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-purple-500/10 dark:from-primary-500/5 dark:to-purple-500/5"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+          <div className="text-center animate-fade-in">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
               Share Knowledge,
-              <span className="text-primary-600"> Learn Together</span>
+              <span className="bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent"> Learn Together</span>
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
               StudyShare is a collaborative platform where students and teachers can upload, share, and access academic resources like notes, past papers, and flashcards.
@@ -135,7 +136,7 @@ const Landing: React.FC = () => {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 StudyShare. All rights reserved.</p>
+            <p>&copy; 2025 StudyShare. All rights reserved.</p>
           </div>
         </div>
       </footer>
