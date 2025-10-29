@@ -2,16 +2,18 @@ from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.db.models import Q
+from django.db.models import Q, F
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import ValidationError
 import os
 from .models import User, Resource, Tag, Rating, Comment
 from .serializers import (
     UserRegistrationSerializer, UserLoginSerializer, UserSerializer,
     ResourceSerializer, TagSerializer, RatingSerializer, CommentSerializer
 )
+from .permissions import IsOwnerOrReadOnly, IsCommentOwnerOrReadOnly
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
@@ -69,11 +71,7 @@ class ResourceListCreateView(generics.ListCreateAPIView):
 class ResourceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Resource.objects.all()
     serializer_class = ResourceSerializer
-    
-    def get_permissions(self):
-        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            return [permissions.IsAuthenticated()]
-        return [permissions.AllowAny()]
+    permission_classes = [IsOwnerOrReadOnly]
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
@@ -83,6 +81,9 @@ def download_resource(request, resource_id):
     if resource.file:
         file_path = resource.file.path
         if os.path.exists(file_path):
+            # Increment download count
+            Resource.objects.filter(id=resource_id).update(download_count=F('download_count') + 1)
+            
             with open(file_path, 'rb') as fh:
                 response = HttpResponse(fh.read(), content_type="application/octet-stream")
                 response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
@@ -116,16 +117,26 @@ class RatingListCreateView(generics.ListCreateAPIView):
 
 class CommentListCreateView(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     
     def get_queryset(self):
         return Comment.objects.filter(resource_id=self.kwargs['resource_id']).order_by('-created_at')
     
     def create(self, request, *args, **kwargs):
-        resource = Resource.objects.get(id=self.kwargs['resource_id'])
+        try:
+            resource = Resource.objects.get(id=self.kwargs['resource_id'])
+        except Resource.DoesNotExist:
+            return Response({'error': 'Resource not found'}, status=status.HTTP_404_NOT_FOUND)
+            
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         comment = serializer.save(user=request.user, resource=resource)
         return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
+
+class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [IsCommentOwnerOrReadOnly]
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
@@ -154,5 +165,29 @@ def search_resources(request):
     if uploader:
         resources = resources.filter(uploader__name__icontains=uploader)
     
-    serializer = ResourceSerializer(resources, many=True)
-    return Response(serializer.data)
+    # Add pagination for large result sets
+    from django.core.paginator import Paginator
+    
+    page_size = request.GET.get('page_size', 20)
+    page = request.GET.get('page', 1)
+    
+    try:
+        page_size = int(page_size)
+        page = int(page)
+    except ValueError:
+        page_size = 20
+        page = 1
+    
+    paginator = Paginator(resources, page_size)
+    page_obj = paginator.get_page(page)
+    
+    serializer = ResourceSerializer(page_obj.object_list, many=True)
+    
+    return Response({
+        'results': serializer.data,
+        'count': paginator.count,
+        'num_pages': paginator.num_pages,
+        'current_page': page,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous()
+    })

@@ -54,11 +54,26 @@ class ResourceSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     tag_names = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
     average_rating = serializers.ReadOnlyField()
+    download_count = serializers.ReadOnlyField()
+    file_size = serializers.SerializerMethodField()
+    file_type = serializers.SerializerMethodField()
     
     class Meta:
         model = Resource
         fields = ['id', 'title', 'description', 'file', 'uploader', 'subject', 
-                 'topic', 'course_code', 'tags', 'tag_names', 'upload_date', 'average_rating']
+                 'topic', 'course_code', 'tags', 'tag_names', 'upload_date', 
+                 'average_rating', 'download_count', 'file_size', 'file_type']
+    
+    def get_file_size(self, obj):
+        if obj.file:
+            return obj.file.size
+        return 0
+    
+    def get_file_type(self, obj):
+        if obj.file:
+            import os
+            return os.path.splitext(obj.file.name)[1].lower()
+        return ''
     
     def create(self, validated_data):
         tag_names = validated_data.pop('tag_names', [])
