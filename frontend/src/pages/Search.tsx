@@ -33,7 +33,7 @@ const Search: React.FC = () => {
       });
 
       const response = await api.get(`/search/?${params.toString()}`);
-      setResources(response.data);
+      setResources(response.data.results || response.data);
     } catch (error) {
       console.error('Error fetching resources:', error);
     } finally {
@@ -229,7 +229,7 @@ const Search: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {loading ? 'Searching...' : `${resources.length} resources found`}
+            {loading ? 'Searching...' : `${resources?.length || 0} resources found`}
           </h2>
         </div>
 

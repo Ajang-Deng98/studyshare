@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db.models import Q, F
 from django_filters.rest_framework import DjangoFilterBackend
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.views.decorators.csrf import csrf_exempt
@@ -98,6 +98,7 @@ def download_resource(request, resource_id):
 def serve_file(request, resource_id):
     """Serve file for preview with proper content type"""
     import mimetypes
+    from django.http import StreamingHttpResponse
     
     resource = get_object_or_404(Resource, id=resource_id)
     
@@ -113,36 +114,48 @@ def serve_file(request, resource_id):
             file_size = os.path.getsize(file_path)
             range_header = request.META.get('HTTP_RANGE')
             
+            def file_iterator(file_path, chunk_size=8192, offset=0, length=None):
+                with open(file_path, 'rb') as f:
+                    f.seek(offset)
+                    remaining = length
+                    while True:
+                        bytes_length = chunk_size if remaining is None else min(remaining, chunk_size)
+                        data = f.read(bytes_length)
+                        if not data:
+                            break
+                        if remaining:
+                            remaining -= len(data)
+                        yield data
+            
             if range_header:
                 range_match = range_header.replace('bytes=', '').split('-')
                 start = int(range_match[0]) if range_match[0] else 0
                 end = int(range_match[1]) if range_match[1] else file_size - 1
+                length = end - start + 1
                 
-                with open(file_path, 'rb') as fh:
-                    fh.seek(start)
-                    data = fh.read(end - start + 1)
-                    
-                response = HttpResponse(
-                    data,
+                response = StreamingHttpResponse(
+                    file_iterator(file_path, offset=start, length=length),
                     status=206,
                     content_type=content_type
                 )
                 response['Content-Range'] = f'bytes {start}-{end}/{file_size}'
                 response['Accept-Ranges'] = 'bytes'
-                response['Content-Length'] = str(end - start + 1)
-                return response
+                response['Content-Length'] = str(length)
             else:
-                with open(file_path, 'rb') as fh:
-                    response = HttpResponse(fh.read(), content_type=content_type)
-                    response['Content-Length'] = str(file_size)
-                    response['Accept-Ranges'] = 'bytes'
-                    
-                    # Add CORS headers for cross-origin requests
-                    response['Access-Control-Allow-Origin'] = '*'
-                    response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
-                    response['Access-Control-Allow-Headers'] = 'Range'
-                    
-                    return response
+                response = StreamingHttpResponse(
+                    file_iterator(file_path),
+                    content_type=content_type
+                )
+                response['Content-Length'] = str(file_size)
+                response['Accept-Ranges'] = 'bytes'
+            
+            # Add CORS headers for cross-origin requests
+            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+            response['Access-Control-Allow-Headers'] = 'Range'
+            response['Cache-Control'] = 'no-cache'
+            
+            return response
     
     raise Http404("File not found")
 
