@@ -11,6 +11,7 @@ import Upload from './pages/Upload';
 import Search from './pages/Search';
 import Profile from './pages/Profile';
 import ResourceDetail from './pages/ResourceDetail';
+import Responsive from './pages/Responsive';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -52,6 +53,16 @@ const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route  
+          path="/responsive" 
+          element={
+            <ProtectedRoute>
+              <Responsive />
+            </ProtectedRoute>
+          } 
+        />
+
         <Route
           path="/profile"
           element={
