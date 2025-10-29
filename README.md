@@ -5,9 +5,9 @@ Empowering African students through collaborative learning and resource sharing
 In many African universities, students face challenges accessing quality study materials due to limited library resources, expensive textbooks, and inadequate digital infrastructure. StudyShare addresses this by creating a collaborative platform where students and teachers can freely share academic resources, fostering a community-driven approach to education that aligns with African values of ubuntu and collective learning.
 
 ## Team Members
-- [Team Member 1] - Full Stack Developer - [Student ID]
-- [Team Member 2] - Frontend Developer - [Student ID]  
-- [Team Member 3] - Backend Developer - [Student ID]
+- AJANG CHOL AGUER DENG - Full Stack Developer 
+- COLLINS JUNIOR - Frontend Developer  
+- LATJOR WOUN - Frontend Developer
 
 ## Project Overview
 StudyShare is a comprehensive web-based platform designed to democratize access to educational resources across African universities. The application enables students and educators to upload, share, and access study materials including lecture notes, past examination papers, research documents, and multimedia content.
