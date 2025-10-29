@@ -3,6 +3,8 @@ import { useAuth } from '../hooks/useAuth';
 import { Resource } from '../types';
 import api from '../utils/api';
 import { StarIcon, TrashIcon } from '@heroicons/react/24/outline';
+import Loader from '../components/Loader';
+import EmptyState from '../components/EmptyState';
 
 const Profile: React.FC = () => {
   const { user } = useAuth();
@@ -39,8 +41,8 @@ const Profile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Loader size="lg" text="Loading your profile..." />
       </div>
     );
   }
@@ -101,9 +103,13 @@ const Profile: React.FC = () => {
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">My Uploads</h2>
         
         {userResources.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500 dark:text-gray-400">You haven't uploaded any resources yet.</p>
-          </div>
+          <EmptyState 
+            type="resources" 
+            title="No uploads yet" 
+            description="You haven't uploaded any resources yet. Start sharing your study materials with the community!"
+            actionText="Upload Resource"
+            onAction={() => window.location.href = '/upload'}
+          />
         ) : (
           <div className="space-y-4">
             {userResources.map((resource) => (

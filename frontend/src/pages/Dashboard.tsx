@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Resource } from '../types';
 import api from '../utils/api';
 import { StarIcon, EyeIcon, ArrowDownTrayIcon } from '@heroicons/react/24/solid';
+import Loader from '../components/Loader';
+import EmptyState from '../components/EmptyState';
 
 const Dashboard: React.FC = () => {
   const [resources, setResources] = useState<Resource[]>([]);
@@ -68,8 +70,8 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Loader size="lg" text="Loading your dashboard..." />
       </div>
     );
   }
@@ -125,11 +127,19 @@ const Dashboard: React.FC = () => {
             View all →
           </Link>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {resources.map((resource) => (
-            <ResourceCard key={resource.id} resource={resource} />
-          ))}
-        </div>
+        {resources.length > 0 ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {resources.map((resource) => (
+              <ResourceCard key={resource.id} resource={resource} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState 
+            type="resources" 
+            actionText="Upload First Resource" 
+            onAction={() => navigate('/upload')}
+          />
+        )}
       </div>
 
       {/* Stats Sections */}
