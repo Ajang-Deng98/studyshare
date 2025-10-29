@@ -2,16 +2,20 @@ from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.db.models import Q
+from django.db.models import Q, F
 from django_filters.rest_framework import DjangoFilterBackend
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import ValidationError
+from django.views.decorators.csrf import csrf_exempt
 import os
+import mimetypes
 from .models import User, Resource, Tag, Rating, Comment
 from .serializers import (
     UserRegistrationSerializer, UserLoginSerializer, UserSerializer,
     ResourceSerializer, TagSerializer, RatingSerializer, CommentSerializer
 )
+from .permissions import IsOwnerOrReadOnly, IsCommentOwnerOrReadOnly
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
@@ -69,11 +73,7 @@ class ResourceListCreateView(generics.ListCreateAPIView):
 class ResourceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Resource.objects.all()
     serializer_class = ResourceSerializer
-    
-    def get_permissions(self):
-        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            return [permissions.IsAuthenticated()]
-        return [permissions.AllowAny()]
+    permission_classes = [IsOwnerOrReadOnly]
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
@@ -83,10 +83,79 @@ def download_resource(request, resource_id):
     if resource.file:
         file_path = resource.file.path
         if os.path.exists(file_path):
+            # Increment download count
+            Resource.objects.filter(id=resource_id).update(download_count=F('download_count') + 1)
+            
             with open(file_path, 'rb') as fh:
                 response = HttpResponse(fh.read(), content_type="application/octet-stream")
                 response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
                 return response
+    
+    raise Http404("File not found")
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def serve_file(request, resource_id):
+    """Serve file for preview with proper content type"""
+    import mimetypes
+    from django.http import StreamingHttpResponse
+    
+    resource = get_object_or_404(Resource, id=resource_id)
+    
+    if resource.file:
+        file_path = resource.file.path
+        if os.path.exists(file_path):
+            # Get the file extension and determine content type
+            content_type, _ = mimetypes.guess_type(file_path)
+            if not content_type:
+                content_type = 'application/octet-stream'
+            
+            # Handle range requests for video/audio streaming
+            file_size = os.path.getsize(file_path)
+            range_header = request.META.get('HTTP_RANGE')
+            
+            def file_iterator(file_path, chunk_size=8192, offset=0, length=None):
+                with open(file_path, 'rb') as f:
+                    f.seek(offset)
+                    remaining = length
+                    while True:
+                        bytes_length = chunk_size if remaining is None else min(remaining, chunk_size)
+                        data = f.read(bytes_length)
+                        if not data:
+                            break
+                        if remaining:
+                            remaining -= len(data)
+                        yield data
+            
+            if range_header:
+                range_match = range_header.replace('bytes=', '').split('-')
+                start = int(range_match[0]) if range_match[0] else 0
+                end = int(range_match[1]) if range_match[1] else file_size - 1
+                length = end - start + 1
+                
+                response = StreamingHttpResponse(
+                    file_iterator(file_path, offset=start, length=length),
+                    status=206,
+                    content_type=content_type
+                )
+                response['Content-Range'] = f'bytes {start}-{end}/{file_size}'
+                response['Accept-Ranges'] = 'bytes'
+                response['Content-Length'] = str(length)
+            else:
+                response = StreamingHttpResponse(
+                    file_iterator(file_path),
+                    content_type=content_type
+                )
+                response['Content-Length'] = str(file_size)
+                response['Accept-Ranges'] = 'bytes'
+            
+            # Add CORS headers for cross-origin requests
+            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+            response['Access-Control-Allow-Headers'] = 'Range'
+            response['Cache-Control'] = 'no-cache'
+            
+            return response
     
     raise Http404("File not found")
 
@@ -116,16 +185,26 @@ class RatingListCreateView(generics.ListCreateAPIView):
 
 class CommentListCreateView(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     
     def get_queryset(self):
         return Comment.objects.filter(resource_id=self.kwargs['resource_id']).order_by('-created_at')
     
     def create(self, request, *args, **kwargs):
-        resource = Resource.objects.get(id=self.kwargs['resource_id'])
+        try:
+            resource = Resource.objects.get(id=self.kwargs['resource_id'])
+        except Resource.DoesNotExist:
+            return Response({'error': 'Resource not found'}, status=status.HTTP_404_NOT_FOUND)
+            
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         comment = serializer.save(user=request.user, resource=resource)
         return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
+
+class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [IsCommentOwnerOrReadOnly]
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
@@ -154,5 +233,29 @@ def search_resources(request):
     if uploader:
         resources = resources.filter(uploader__name__icontains=uploader)
     
-    serializer = ResourceSerializer(resources, many=True)
-    return Response(serializer.data)
+    # Add pagination for large result sets
+    from django.core.paginator import Paginator
+    
+    page_size = request.GET.get('page_size', 20)
+    page = request.GET.get('page', 1)
+    
+    try:
+        page_size = int(page_size)
+        page = int(page)
+    except ValueError:
+        page_size = 20
+        page = 1
+    
+    paginator = Paginator(resources, page_size)
+    page_obj = paginator.get_page(page)
+    
+    serializer = ResourceSerializer(page_obj.object_list, many=True)
+    
+    return Response({
+        'results': serializer.data,
+        'count': paginator.count,
+        'num_pages': paginator.num_pages,
+        'current_page': page,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous()
+    })

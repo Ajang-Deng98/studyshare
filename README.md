@@ -122,11 +122,31 @@ formative_1_group3/
 │   │   └── utils/           
 │   ├── public/              
 │   └── package.json         
+│   ├── studyshare/          # Django project settings
+│   ├── api/                 # Main API application
+│   │   ├── models.py        # Database models
+│   │   ├── views.py         # API endpoints
+│   │   ├── serializers.py   # Data serialization
+│   │   └── urls.py          # URL routing
+│   ├── media/               # Uploaded files
+│   └── requirements.txt     # Python dependencies
+├── frontend/
+│   ├── src/
+│   │   ├── components/      # Reusable React components
+│   │   ├── pages/           # Page components
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── types/           # TypeScript interfaces
+│   │   └── utils/           # Utility functions
+│   ├── public/              # Static assets
+│   └── package.json         # Node.js dependencies
 └── README.md
 ```
 
 ## Links
 - [Project Repository]https://github.com/Ajang-Deng98/studyshare
+- [Project Repository](your-repo-url)
+- [API Documentation](API_Documentation.md)
+- [Setup Guide](setup.md)
 
 ## License
 MIT License
