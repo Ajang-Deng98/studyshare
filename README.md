@@ -48,7 +48,7 @@ The platform promotes collaborative learning by allowing users to rate resources
 
 1. **Clone the repository**
    ```bash
-   git clone [your-repo-url]
+   git clone https://github.com/Ajang-Deng98/studyshare
    cd formative_1_group3
    ```
 
@@ -105,23 +105,6 @@ The platform promotes collaborative learning by allowing users to rate resources
 ```
 formative_1_group3/
 ├── backend/
-│   ├── studyshare/          
-│   ├── api/                 
-│   │   ├── models.py        
-│   │   ├── views.py         
-│   │   ├── serializers.py   
-│   │   └── urls.py          
-│   ├── media/               
-│   └── requirements.txt     
-├── frontend/
-│   ├── src/
-│   │   ├── components/      
-│   │   ├── pages/           
-│   │   ├── hooks/           
-│   │   ├── types/           
-│   │   └── utils/           
-│   ├── public/              
-│   └── package.json         
 │   ├── studyshare/          # Django project settings
 │   ├── api/                 # Main API application
 │   │   ├── models.py        # Database models
@@ -143,8 +126,7 @@ formative_1_group3/
 ```
 
 ## Links
-- [Project Repository]https://github.com/Ajang-Deng98/studyshare
-- [Project Repository](your-repo-url)
+- [Project Repository](https://github.com/Ajang-Deng98/studyshare)
 - [API Documentation](API_Documentation.md)
 - [Setup Guide](setup.md)
 
