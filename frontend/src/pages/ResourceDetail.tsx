@@ -4,7 +4,9 @@ import { Resource, Comment, Rating } from '../types';
 import api from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { StarIcon, ArrowDownTrayIcon } from '@heroicons/react/24/solid';
-import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline';
+import { StarIcon as StarOutlineIcon, EyeIcon } from '@heroicons/react/24/outline';
+import FilePreview from '../components/FilePreview';
+import FilePreviewModal from '../components/FilePreviewModal';
 
 const ResourceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +17,7 @@ const ResourceDetail: React.FC = () => {
   const [userRating, setUserRating] = useState<number>(0);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -152,120 +155,32 @@ const ResourceDetail: React.FC = () => {
             )}
           </div>
 
-          <button
-            onClick={downloadFile}
-            className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-medium flex items-center space-x-2 transition-all shadow-md hover:shadow-lg"
-          >
-            <ArrowDownTrayIcon className="h-5 w-5" />
-            <span>Download</span>
-          </button>
-        </div>
-
-        {/* File Preview & Download */}
-        <div className="bg-gray-50 rounded-xl p-6 mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">File Preview</h3>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => setShowPreviewModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium flex items-center space-x-2 transition-all shadow-md hover:shadow-lg"
+            >
+              <EyeIcon className="h-5 w-5" />
+              <span>Preview</span>
+            </button>
             <button
               onClick={downloadFile}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-all"
+              className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-medium flex items-center space-x-2 transition-all shadow-md hover:shadow-lg"
             >
-              <ArrowDownTrayIcon className="h-4 w-4" />
-              <span>Download File</span>
+              <ArrowDownTrayIcon className="h-5 w-5" />
+              <span>Download</span>
             </button>
           </div>
-          
-          {resource.file.toLowerCase().endsWith('.pdf') ? (
-            <div>
-              <embed
-                src={`http://localhost:8000${resource.file}#toolbar=1&navpanes=1&scrollbar=1`}
-                type="application/pdf"
-                className="w-full h-96 border border-gray-300 rounded-lg mb-4"
-                title="PDF Preview"
-              />
-              <div className="text-center">
-                <button
-                  onClick={downloadFile}
-                  className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-medium flex items-center space-x-2 mx-auto transition-all"
-                >
-                  <ArrowDownTrayIcon className="h-5 w-5" />
-                  <span>Download PDF</span>
-                </button>
-              </div>
-            </div>
-          ) : resource.file.toLowerCase().match(/\.(docx?|txt|rtf)$/) ? (
-            <div>
-              <div className="bg-white border border-gray-300 rounded-lg p-6 mb-4">
-                <div className="flex items-center justify-center h-48">
-                  <div className="text-center">
-                    <div className="text-6xl mb-4">📄</div>
-                    <p className="text-gray-600 font-medium">{resource.file.split('/').pop()}</p>
-                    <p className="text-gray-500 text-sm">Document file</p>
-                  </div>
-                </div>
-              </div>
-              <div className="text-center">
-                <button
-                  onClick={downloadFile}
-                  className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-medium flex items-center space-x-2 mx-auto transition-all"
-                >
-                  <ArrowDownTrayIcon className="h-5 w-5" />
-                  <span>Download Document</span>
-                </button>
-              </div>
-            </div>
-          ) : resource.file.toLowerCase().match(/\.(jpg|jpeg|png|gif)$/) ? (
-            <div>
-              <img
-                src={`http://localhost:8000${resource.file}`}
-                alt={resource.title}
-                className="max-w-full h-auto rounded-lg mb-4 mx-auto"
-              />
-              <div className="text-center">
-                <button
-                  onClick={downloadFile}
-                  className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-medium flex items-center space-x-2 mx-auto transition-all"
-                >
-                  <ArrowDownTrayIcon className="h-5 w-5" />
-                  <span>Download Image</span>
-                </button>
-              </div>
-            </div>
-          ) : resource.file.toLowerCase().match(/\.(mp4|avi|mov|wmv)$/) ? (
-            <div>
-              <video
-                controls
-                className="w-full h-96 rounded-lg mb-4"
-                src={`http://localhost:8000${resource.file}`}
-              >
-                Your browser does not support the video tag.
-              </video>
-              <div className="text-center">
-                <button
-                  onClick={downloadFile}
-                  className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-medium flex items-center space-x-2 mx-auto transition-all"
-                >
-                  <ArrowDownTrayIcon className="h-5 w-5" />
-                  <span>Download Video</span>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <div className="bg-white rounded-lg p-8 border-2 border-dashed border-gray-300">
-                <ArrowDownTrayIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">File: {resource.file.split('/').pop()}</p>
-                <p className="text-gray-500 mb-6">Preview not available for this file type</p>
-                <button
-                  onClick={downloadFile}
-                  className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-4 rounded-xl font-medium flex items-center space-x-2 mx-auto transition-all text-lg"
-                >
-                  <ArrowDownTrayIcon className="h-6 w-6" />
-                  <span>Download File</span>
-                </button>
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* File Preview */}
+        <FilePreview
+          fileUrl={resource.file}
+          fileName={resource.file.split('/').pop() || 'Unknown file'}
+          title={resource.title}
+          resourceId={resource.id}
+          onDownload={downloadFile}
+        />
 
         {/* Rating Section */}
         {user && (
@@ -338,6 +253,17 @@ const ResourceDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        fileUrl={resource.file}
+        fileName={resource.file.split('/').pop() || 'Unknown file'}
+        title={resource.title}
+        resourceId={resource.id}
+        onDownload={downloadFile}
+      />
     </div>
   );
 };

@@ -7,7 +7,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
+from django.views.decorators.csrf import csrf_exempt
 import os
+import mimetypes
 from .models import User, Resource, Tag, Rating, Comment
 from .serializers import (
     UserRegistrationSerializer, UserLoginSerializer, UserSerializer,
@@ -88,6 +90,59 @@ def download_resource(request, resource_id):
                 response = HttpResponse(fh.read(), content_type="application/octet-stream")
                 response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
                 return response
+    
+    raise Http404("File not found")
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def serve_file(request, resource_id):
+    """Serve file for preview with proper content type"""
+    import mimetypes
+    
+    resource = get_object_or_404(Resource, id=resource_id)
+    
+    if resource.file:
+        file_path = resource.file.path
+        if os.path.exists(file_path):
+            # Get the file extension and determine content type
+            content_type, _ = mimetypes.guess_type(file_path)
+            if not content_type:
+                content_type = 'application/octet-stream'
+            
+            # Handle range requests for video/audio streaming
+            file_size = os.path.getsize(file_path)
+            range_header = request.META.get('HTTP_RANGE')
+            
+            if range_header:
+                range_match = range_header.replace('bytes=', '').split('-')
+                start = int(range_match[0]) if range_match[0] else 0
+                end = int(range_match[1]) if range_match[1] else file_size - 1
+                
+                with open(file_path, 'rb') as fh:
+                    fh.seek(start)
+                    data = fh.read(end - start + 1)
+                    
+                response = HttpResponse(
+                    data,
+                    status=206,
+                    content_type=content_type
+                )
+                response['Content-Range'] = f'bytes {start}-{end}/{file_size}'
+                response['Accept-Ranges'] = 'bytes'
+                response['Content-Length'] = str(end - start + 1)
+                return response
+            else:
+                with open(file_path, 'rb') as fh:
+                    response = HttpResponse(fh.read(), content_type=content_type)
+                    response['Content-Length'] = str(file_size)
+                    response['Accept-Ranges'] = 'bytes'
+                    
+                    # Add CORS headers for cross-origin requests
+                    response['Access-Control-Allow-Origin'] = '*'
+                    response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+                    response['Access-Control-Allow-Headers'] = 'Range'
+                    
+                    return response
     
     raise Http404("File not found")
 
