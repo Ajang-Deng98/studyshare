@@ -10,7 +10,6 @@ interface FilePreviewProps {
 }
 
 const FilePreview: React.FC<FilePreviewProps> = ({ fileUrl, fileName, title, resourceId, onDownload }) => {
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   const getFileExtension = (filename: string): string => {
@@ -39,57 +38,41 @@ const FilePreview: React.FC<FilePreviewProps> = ({ fileUrl, fileName, title, res
     : (fileUrl.startsWith('http') ? fileUrl : `http://localhost:8000${fileUrl}`);
 
   const renderPDFPreview = () => (
-    <div className="relative">
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="flex items-center justify-between p-4 bg-gray-50 border-b">
-          <div className="flex items-center space-x-2">
-            <DocumentIcon className="h-5 w-5 text-red-500" />
-            <span className="font-medium text-gray-700">PDF Document</span>
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setIsFullscreen(true)}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              title="View Fullscreen"
-            >
-              <EyeIcon className="h-4 w-4" />
-            </button>
-            <button
-              onClick={onDownload}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Download"
-            >
-              <ArrowDownTrayIcon className="h-4 w-4" />
-            </button>
-          </div>
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="flex items-center justify-between p-4 bg-gray-50 border-b">
+        <div className="flex items-center space-x-2">
+          <DocumentIcon className="h-5 w-5 text-red-500" />
+          <span className="font-medium text-gray-700">PDF Document</span>
         </div>
-        <iframe
-          src={`${fullUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-          className="w-full h-96 border-0"
-          title="PDF Preview"
-        />
+        <button
+          onClick={onDownload}
+          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          title="Download"
+        >
+          <ArrowDownTrayIcon className="h-4 w-4" />
+        </button>
       </div>
-      
-      {isFullscreen && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
-          <div className="w-full h-full max-w-6xl bg-white rounded-lg overflow-hidden">
-            <div className="flex items-center justify-between p-4 bg-gray-100 border-b">
-              <h3 className="font-semibold text-gray-800">{title}</h3>
-              <button
-                onClick={() => setIsFullscreen(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl font-bold"
-              >
-                ×
-              </button>
-            </div>
-            <iframe
-              src={`${fullUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-              className="w-full h-full border-0"
-              title="PDF Fullscreen"
-            />
-          </div>
+      <div className="p-8 text-center">
+        <div className="w-20 h-20 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+          <DocumentIcon className="h-10 w-10 text-red-500" />
         </div>
-      )}
+        <h3 className="font-medium text-gray-800 mb-2">{fileName}</h3>
+        <p className="text-gray-500 mb-4">PDF Document</p>
+        <div className="space-y-3">
+          <button
+            onClick={() => window.open(fullUrl, '_blank')}
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors mr-3"
+          >
+            Open in New Tab
+          </button>
+          <button
+            onClick={onDownload}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+          >
+            Download PDF
+          </button>
+        </div>
+      </div>
     </div>
   );
 

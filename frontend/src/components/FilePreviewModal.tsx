@@ -64,16 +64,37 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
     switch (fileType) {
       case 'pdf':
         return (
-          <iframe
-            src={`${fullUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-            className="w-full h-full border-0"
-            title="PDF Preview"
-            onLoad={() => setLoading(false)}
-            onError={() => {
-              setLoading(false);
-              setError(true);
-            }}
-          />
+          <div className="flex flex-col items-center justify-center h-full p-8">
+            <div className="w-24 h-24 bg-red-100 rounded-lg flex items-center justify-center mb-6">
+              <svg className="w-12 h-12 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">{title}</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6 text-center">PDF files are best viewed by downloading or opening in a new tab</p>
+            <div className="flex space-x-4">
+              <button
+                onClick={() => {
+                  window.open(fullUrl, '_blank');
+                  setLoading(false);
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
+              >
+                <EyeIcon className="h-5 w-5" />
+                <span>Open in New Tab</span>
+              </button>
+              <button
+                onClick={() => {
+                  onDownload();
+                  setLoading(false);
+                }}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
+              >
+                <ArrowDownTrayIcon className="h-5 w-5" />
+                <span>Download</span>
+              </button>
+            </div>
+          </div>
         );
       
       case 'image':
