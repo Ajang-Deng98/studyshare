@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Resource } from '../types';
 import api from '../utils/api';
 import { StarIcon, EyeIcon, ArrowDownTrayIcon } from '@heroicons/react/24/solid';
@@ -7,6 +7,7 @@ import Loader from '../components/Loader';
 import EmptyState from '../components/EmptyState';
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [resources, setResources] = useState<Resource[]>([]);
   const [mostDownloaded, setMostDownloaded] = useState<Resource[]>([]);
   const [topRated, setTopRated] = useState<Resource[]>([]);
