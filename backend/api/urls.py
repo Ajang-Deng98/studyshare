@@ -12,6 +12,7 @@ urlpatterns = [
     path('resources/<int:resource_id>/comments/', views.CommentListCreateView.as_view(), name='resource-comments'),
     path('comments/<int:pk>/', views.CommentDetailView.as_view(), name='comment-detail'),
     path('resources/<int:resource_id>/download/', views.download_resource, name='download-resource'),
+    path('resources/<int:resource_id>/serve/', views.serve_file, name='serve-file'),
     path('tags/', views.TagListView.as_view(), name='tag-list'),
     path('search/', views.search_resources, name='search-resources'),
 ]
