@@ -1,43 +1,132 @@
-# StudyShare - Collaborative Learning Resource Platform
+# StudyShare
+Empowering African students through collaborative learning and resource sharing
 
-A full-stack web application for students and teachers to upload, share, and access academic resources.
+## African Context
+In many African universities, students face challenges accessing quality study materials due to limited library resources, expensive textbooks, and inadequate digital infrastructure. StudyShare addresses this by creating a collaborative platform where students and teachers can freely share academic resources, fostering a community-driven approach to education that aligns with African values of ubuntu and collective learning.
+
+## Team Members
+- AJANG CHOL AGUER DENG - Full Stack Developer 
+- COLLINS JUNIOR - Frontend Developer  
+- LATJOR WOUN - Frontend Developer
+
+## Project Overview
+StudyShare is a comprehensive web-based platform designed to democratize access to educational resources across African universities. The application enables students and educators to upload, share, and access study materials including lecture notes, past examination papers, research documents, and multimedia content.
+
+The platform promotes collaborative learning by allowing users to rate resources, provide feedback through comments, and discover high-quality materials through an intelligent search system. By leveraging modern web technologies, StudyShare creates an inclusive digital learning environment that transcends geographical and economic barriers.
+
+## Target Users
+- University students seeking quality study materials
+- Educators wanting to share resources with broader academic community
+- Academic institutions looking to enhance resource accessibility
+- Study groups and learning communities
+
+## Core Features
+- **Resource Sharing**: Upload and download academic materials in multiple formats (PDF, DOCX, images, videos)
+- **Collaborative Rating System**: Community-driven quality assurance through ratings and comments
+- **Advanced Search & Filtering**: Find resources by subject, topic, course code, or uploader
+- **User Authentication**: Secure JWT-based authentication with role-based access (Student/Teacher)
+- **Responsive Design**: Mobile-friendly interface accessible on all devices
+- **File Management**: Organized storage with preview capabilities and download tracking
 
 ## Technology Stack
+- **Backend**: Django REST Framework (Python)
 - **Frontend**: React + TypeScript + Tailwind CSS
-- **Backend**: Django REST Framework
 - **Database**: PostgreSQL
+- **Authentication**: JWT (JSON Web Tokens)
+- **File Storage**: Local file system with download API
+- **Other**: Axios for API calls, React Router for navigation
 
-## Setup Instructions
+## Getting Started
 
-### Backend Setup
-1. Navigate to backend directory: `cd backend`
-2. Create virtual environment: `python -m venv venv`
-3. Activate virtual environment: `venv\Scripts\activate` (Windows) or `source venv/bin/activate` (Mac/Linux)
-4. Install dependencies: `pip install -r requirements.txt`
-5. Setup database: `python manage.py migrate`
-6. Create superuser: `python manage.py createsuperuser`
-7. Run server: `python manage.py runserver`
+### Prerequisites
+- Python 3.8+
+- Node.js 16+
+- PostgreSQL 12+
+- Git
 
-### Frontend Setup
-1. Navigate to frontend directory: `cd frontend`
-2. Install dependencies: `npm install`
-3. Start development server: `npm start`
+### Installation
 
-## API Endpoints
-- `/api/register/` - User registration
-- `/api/login/` - User authentication
-- `/api/logout/` - Logout
-- `/api/users/` - User profile management
-- `/api/resources/` - Resource CRUD operations
-- `/api/tags/` - Tag management
-- `/api/ratings/` - Resource ratings
-- `/api/comments/` - Resource comments
-- `/api/search/` - Search resources
+1. **Clone the repository**
+   ```bash
+   git clone [your-repo-url]
+   cd formative_1_group3
+   ```
 
-## Features
-- User authentication with JWT
-- File upload with cloud storage
-- Resource search and filtering
-- Rating and comment system
-- Responsive design
-- Dark/Light mode toggle
+2. **Backend Setup**
+   ```bash
+   cd backend
+   python -m venv venv
+   venv\Scripts\activate  # Windows
+   # source venv/bin/activate  # Mac/Linux
+   pip install -r requirements.txt
+   ```
+
+3. **Database Setup**
+   ```bash
+   python manage.py makemigrations
+   python manage.py migrate
+   python manage.py createsuperuser
+   ```
+
+4. **Frontend Setup**
+   ```bash
+   cd ../frontend
+   npm install
+   ```
+
+### Run the application
+
+1. **Start Backend Server**
+   ```bash
+   cd backend
+   python manage.py runserver
+   ```
+
+2. **Start Frontend Server**
+   ```bash
+   cd frontend
+   npm start
+   ```
+
+3. **Access the application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000/api/
+   - Admin Panel: http://localhost:8000/admin/
+
+## Usage
+
+1. **Registration**: Create account as Student or Teacher
+2. **Upload Resources**: Share study materials with title, description, and tags
+3. **Search & Download**: Find resources using filters and download files
+4. **Rate & Comment**: Provide feedback on resource quality
+5. **Profile Management**: View uploaded resources and manage account
+
+## Project Structure
+```
+formative_1_group3/
+├── backend/
+│   ├── studyshare/          
+│   ├── api/                 
+│   │   ├── models.py        
+│   │   ├── views.py         
+│   │   ├── serializers.py   
+│   │   └── urls.py          
+│   ├── media/               
+│   └── requirements.txt     
+├── frontend/
+│   ├── src/
+│   │   ├── components/      
+│   │   ├── pages/           
+│   │   ├── hooks/           
+│   │   ├── types/           
+│   │   └── utils/           
+│   ├── public/              
+│   └── package.json         
+└── README.md
+```
+
+## Links
+- [Project Repository]https://github.com/Ajang-Deng98/studyshare
+
+## License
+MIT License
