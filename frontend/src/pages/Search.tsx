@@ -4,6 +4,8 @@ import { Resource } from '../types';
 import api from '../utils/api';
 import { MagnifyingGlassIcon, StarIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/solid';
+import Loader from '../components/Loader';
+import EmptyState from '../components/EmptyState';
 
 const Search: React.FC = () => {
   const [resources, setResources] = useState<Resource[]>([]);
@@ -220,9 +222,7 @@ const Search: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
+          <Loader size="md" text="Searching resources..." />
         ) : resources.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {resources.map((resource) => (
@@ -230,15 +230,7 @@ const Search: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <MagnifyingGlassIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No resources found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              Try adjusting your search terms or filters
-            </p>
-          </div>
+          <EmptyState type="search" />
         )}
       </div>
     </div>
