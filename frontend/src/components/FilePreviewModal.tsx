@@ -118,14 +118,17 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
           <div className="flex items-center justify-center h-full p-4 bg-black">
             <video
               controls
+              preload="metadata"
               className="max-w-full max-h-full"
-              onLoadedData={() => setLoading(false)}
+              onLoadedMetadata={() => setLoading(false)}
               onError={() => {
                 setLoading(false);
                 setError(true);
               }}
             >
-              <source src={fullUrl} />
+              <source src={fullUrl} type="video/mp4" />
+              <source src={fullUrl} type="video/webm" />
+              <source src={fullUrl} type="video/ogg" />
               Your browser does not support the video tag.
             </video>
           </div>
@@ -142,14 +145,17 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">{title}</h3>
             <audio
               controls
+              preload="metadata"
               className="w-full max-w-md"
-              onLoadedData={() => setLoading(false)}
+              onLoadedMetadata={() => setLoading(false)}
               onError={() => {
                 setLoading(false);
                 setError(true);
               }}
             >
-              <source src={fullUrl} />
+              <source src={fullUrl} type="audio/mpeg" />
+              <source src={fullUrl} type="audio/wav" />
+              <source src={fullUrl} type="audio/ogg" />
               Your browser does not support the audio tag.
             </audio>
           </div>

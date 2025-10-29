@@ -10,6 +10,7 @@ interface FilePreviewProps {
 }
 
 const FilePreview: React.FC<FilePreviewProps> = ({ fileUrl, fileName, title, resourceId, onDownload }) => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   const getFileExtension = (filename: string): string => {
@@ -158,8 +159,11 @@ const FilePreview: React.FC<FilePreviewProps> = ({ fileUrl, fileName, title, res
           controls
           className="w-full max-h-96 rounded-lg"
           preload="metadata"
+          controlsList="nodownload"
         >
-          <source src={fullUrl} />
+          <source src={fullUrl} type="video/mp4" />
+          <source src={fullUrl} type="video/webm" />
+          <source src={fullUrl} type="video/ogg" />
           Your browser does not support the video tag.
         </video>
       </div>
@@ -191,8 +195,11 @@ const FilePreview: React.FC<FilePreviewProps> = ({ fileUrl, fileName, title, res
           controls
           className="w-full"
           preload="metadata"
+          controlsList="nodownload"
         >
-          <source src={fullUrl} />
+          <source src={fullUrl} type="audio/mpeg" />
+          <source src={fullUrl} type="audio/wav" />
+          <source src={fullUrl} type="audio/ogg" />
           Your browser does not support the audio tag.
         </audio>
       </div>

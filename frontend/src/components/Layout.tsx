@@ -41,7 +41,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
               {/* Search Bar */}
               {user && (
-                <div className="hidden md:flex flex-1 max-w-lg mx-8">
+                <div className="hidden md:flex flex-1 max-w-lg mx-8 items-center">
                   <form onSubmit={handleSearch} className="w-full">
                     <div className="relative">
                       <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -50,7 +50,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search resources..."
-                        className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 border-0 rounded-2xl focus:ring-2 focus:ring-primary-500 text-sm transition-all duration-300"
+                        className="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-gray-800 border-0 rounded-2xl focus:ring-2 focus:ring-primary-500 text-sm transition-all duration-300"
                       />
                     </div>
                   </form>
