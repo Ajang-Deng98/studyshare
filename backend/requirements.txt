@@ -8,3 +8,5 @@ cloudinary
 django-cloudinary-storage
 Pillow
 django-filter
+flake8
+pytest-django

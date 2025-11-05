@@ -39,17 +39,34 @@ The platform promotes collaborative learning by allowing users to rate resources
 ## Getting Started
 
 ### Prerequisites
-- Python 3.8+
-- Node.js 16+
-- PostgreSQL 12+
+- Docker and Docker Compose (recommended)
+- OR Python 3.11+, Node.js 18+, PostgreSQL 15+
 - Git
 
-### Installation
+### Quick Start with Docker (Recommended)
 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/Ajang-Deng98/studyshare
-   cd formative_1_group3
+   cd studyshare
+   ```
+
+2. **Run with Docker Compose**
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Access the application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000/api/
+   - Admin Panel: http://localhost:8000/admin/
+
+### Manual Installation (Alternative)
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Ajang-Deng98/studyshare
+   cd studyshare
    ```
 
 2. **Backend Setup**
@@ -74,7 +91,7 @@ The platform promotes collaborative learning by allowing users to rate resources
    npm install
    ```
 
-### Run the application
+### Run the application manually
 
 1. **Start Backend Server**
    ```bash
@@ -92,6 +109,25 @@ The platform promotes collaborative learning by allowing users to rate resources
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8000/api/
    - Admin Panel: http://localhost:8000/admin/
+
+### Docker Commands
+
+**Development:**
+- **Build and start all services**: `docker-compose up --build`
+- **Start in background**: `docker-compose up -d`
+- **Stop all services**: `docker-compose down`
+- **View logs**: `docker-compose logs -f`
+- **Rebuild specific service**: `docker-compose build backend`
+
+**Production:**
+- **Setup environment**: `cp .env.docker .env` (then edit .env with your values)
+- **Deploy**: `docker-compose -f docker-compose.prod.yml up -d --build`
+- **Stop**: `docker-compose -f docker-compose.prod.yml down`
+
+**Individual Services:**
+- **Backend only**: `docker build -t studyshare-backend ./backend`
+- **Frontend only**: `docker build -t studyshare-frontend ./frontend`
+- **Combined app**: `docker build -t studyshare-app .`
 
 ## Usage
 
