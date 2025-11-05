@@ -2,8 +2,10 @@ name: CI Pipeline
 
 on:
   push:
-    branches-ignore:
+    branches:
       - main
+      - develop
+      - feature/*
   pull_request:
     branches:
       - main
