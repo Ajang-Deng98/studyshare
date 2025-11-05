@@ -8,5 +8,5 @@ exclude =
     venv,
     .venv
 ignore = 
-    E501,  # line too long
-    W503,  # line break before binary operator
+    E501,
+    W503
