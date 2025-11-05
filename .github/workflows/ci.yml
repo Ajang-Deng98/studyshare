@@ -16,7 +16,7 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_PASSWORD: password
+          POSTGRES_PASSWORD: Ajangdeng98%
           POSTGRES_DB: studyshare
         options: >-
           --health-cmd pg_isready
@@ -53,7 +53,7 @@ jobs:
         DB_HOST: localhost
         DB_NAME: studyshare
         DB_USER: postgres
-        DB_PASSWORD: password
+        DB_PASSWORD: Ajangdeng98%
         SECRET_KEY: test-secret-key
       run: |
         python manage.py test
