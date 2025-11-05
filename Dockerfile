@@ -4,7 +4,7 @@ FROM node:18-alpine AS frontend-build
 # Build frontend
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install && npm cache clean --force
 COPY frontend/ ./
 RUN npm run build
 
