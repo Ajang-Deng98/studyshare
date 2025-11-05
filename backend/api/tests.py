@@ -21,3 +21,8 @@ class BasicModelTest(TestCase):
     def test_basic_functionality(self):
         """Test basic Django functionality"""
         self.assertTrue(True)  # Basic test to ensure test runner works
+        
+    def test_settings_import(self):
+        """Test that Django settings can be imported"""
+        from django.conf import settings
+        self.assertIsNotNone(settings.SECRET_KEY)
