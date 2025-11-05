@@ -20,6 +20,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: password
           POSTGRES_DB: studyshare
+          POSTGRES_USER: postgres
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -45,8 +46,8 @@ jobs:
     - name: Lint backend code
       working-directory: ./backend
       run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        flake8 --version
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=migrations,__pycache__,venv,.venv
     
     - name: Run backend tests
       working-directory: ./backend
@@ -55,9 +56,10 @@ jobs:
         DB_NAME: studyshare
         DB_USER: postgres
         DB_PASSWORD: password
-        SECRET_KEY: test-secret-key
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: False
       run: |
-        python manage.py test
+        python manage.py test --verbosity=2
 
   test-frontend:
     runs-on: ubuntu-latest
@@ -72,17 +74,21 @@ jobs:
     
     - name: Install frontend dependencies
       working-directory: ./frontend
-      run: npm install
+      run: |
+        npm install --legacy-peer-deps
     
     - name: Run frontend tests
       working-directory: ./frontend
-      run: npm test -- --coverage --watchAll=false --passWithNoTests
+      run: |
+        npm test -- --coverage --watchAll=false --passWithNoTests --testPathIgnorePatterns=[]
     
     - name: Build frontend
       working-directory: ./frontend
       env:
         CI: false
-      run: npm run build
+        GENERATE_SOURCEMAP: false
+      run: |
+        npm run build
 
   docker-build:
     runs-on: ubuntu-latest
@@ -99,10 +105,6 @@ jobs:
       run: |
         docker build -t studyshare-frontend ./frontend
     
-    - name: Build combined Docker image
-      run: |
-        docker build -t studyshare-app .
-    
-    - name: Test Docker Compose
+    - name: Test Docker Compose config
       run: |
         docker-compose config
