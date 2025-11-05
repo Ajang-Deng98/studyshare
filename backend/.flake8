@@ -1,10 +1,12 @@
 [flake8]
 max-line-length = 127
-exclude = 
+exclude =
     migrations,
     __pycache__,
     manage.py,
     settings.py,
     venv,
     .venv
-ignore = E501,W503
+ignore =
+    E501
+    W503
