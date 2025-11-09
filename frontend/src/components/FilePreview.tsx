@@ -206,85 +206,36 @@ const FilePreview: React.FC<FilePreviewProps> = ({ fileUrl, fileName, title, res
     </div>
   );
 
-  const renderTextPreview = () => {
-    const [textContent, setTextContent] = useState<string>('');
-    const [loadingText, setLoadingText] = useState(false);
-    const [textError, setTextError] = useState(false);
-
-    const loadTextContent = async () => {
-      setLoadingText(true);
-      try {
-        const response = await fetch(fullUrl);
-        if (response.ok) {
-          const text = await response.text();
-          setTextContent(text.slice(0, 1000)); // Show first 1000 characters
-        } else {
-          setTextError(true);
-        }
-      } catch (error) {
-        setTextError(true);
-      } finally {
-        setLoadingText(false);
-      }
-    };
-
-    React.useEffect(() => {
-      loadTextContent();
-    }, []);
-
-    return (
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="flex items-center justify-between p-4 bg-gray-50 border-b">
-          <div className="flex items-center space-x-2">
-            <DocumentIcon className="h-5 w-5 text-green-600" />
-            <span className="font-medium text-gray-700">Text Document</span>
-          </div>
-          <button
-            onClick={onDownload}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Download"
-          >
-            <ArrowDownTrayIcon className="h-4 w-4" />
-          </button>
+  const renderTextPreview = () => (
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="flex items-center justify-between p-4 bg-gray-50 border-b">
+        <div className="flex items-center space-x-2">
+          <DocumentIcon className="h-5 w-5 text-green-600" />
+          <span className="font-medium text-gray-700">Text Document</span>
         </div>
-        <div className="p-4">
-          {loadingText ? (
-            <div className="flex items-center justify-center h-48">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-            </div>
-          ) : textError ? (
-            <div className="text-center py-8">
-              <DocumentIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">Unable to preview text content</p>
-              <button
-                onClick={onDownload}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-              >
-                Download to View
-              </button>
-            </div>
-          ) : (
-            <div>
-              <div className="bg-gray-50 rounded-lg p-4 mb-4 max-h-64 overflow-y-auto">
-                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-                  {textContent}
-                  {textContent.length >= 1000 && '...'}
-                </pre>
-              </div>
-              <div className="text-center">
-                <button
-                  onClick={onDownload}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-                >
-                  Download Full Document
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        <button
+          onClick={onDownload}
+          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          title="Download"
+        >
+          <ArrowDownTrayIcon className="h-4 w-4" />
+        </button>
       </div>
-    );
-  };
+      <div className="p-8 text-center">
+        <div className="w-20 h-20 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+          <DocumentIcon className="h-10 w-10 text-green-600" />
+        </div>
+        <h3 className="font-medium text-gray-800 mb-2">{fileName}</h3>
+        <p className="text-gray-500 mb-4">Text Document</p>
+        <button
+          onClick={onDownload}
+          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+        >
+          Download to View
+        </button>
+      </div>
+    </div>
+  );
 
   const renderDocumentPreview = () => (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">

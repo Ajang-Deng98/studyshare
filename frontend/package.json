@@ -21,7 +21,7 @@
     "@heroicons/react": "^2.0.18"
   },
   "scripts": {
-    "start": "ESLINT_NO_DEV_ERRORS=true DISABLE_ESLINT_PLUGIN=true react-scripts start",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
