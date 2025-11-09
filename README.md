@@ -27,6 +27,14 @@ The platform promotes collaborative learning by allowing users to rate resources
 - **User Authentication**: Secure JWT-based authentication with role-based access (Student/Teacher)
 - **Responsive Design**: Mobile-friendly interface accessible on all devices
 - **File Management**: Organized storage with preview capabilities and download tracking
+- **Real-time Notifications**: Get notified when resources are commented on or rated
+- **Bookmark System**: Save favorite resources for quick access
+- **Category Management**: Organize resources by academic subjects and courses
+- **Download Analytics**: Track resource popularity and usage statistics
+- **Content Moderation**: Report inappropriate content and admin review system
+- **Offline Access**: Download resources for offline studying
+- **Multi-language Support**: Interface available in English, French, and Swahili
+- **Dark/Light Theme**: Toggle between themes for comfortable viewing
 
 ## Technology Stack
 - **Backend**: Django REST Framework (Python)
@@ -34,6 +42,13 @@ The platform promotes collaborative learning by allowing users to rate resources
 - **Database**: PostgreSQL
 - **Authentication**: JWT (JSON Web Tokens)
 - **File Storage**: Local file system with download API
+- **Caching**: Redis for session management
+- **Search Engine**: Elasticsearch for advanced search capabilities
+- **File Processing**: Celery for background tasks
+- **API Documentation**: Swagger/OpenAPI
+- **Testing**: Jest (Frontend), Pytest (Backend)
+- **Deployment**: Docker, Nginx, Gunicorn
+- **Monitoring**: Sentry for error tracking
 - **Other**: Axios for API calls, React Router for navigation
 
 ## Getting Started
@@ -125,10 +140,99 @@ formative_1_group3/
 └── README.md
 ```
 
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register/` - User registration
+- `POST /api/auth/login/` - User login
+- `POST /api/auth/logout/` - User logout
+- `GET /api/auth/profile/` - Get user profile
+
+### Resources
+- `GET /api/resources/` - List all resources
+- `POST /api/resources/` - Upload new resource
+- `GET /api/resources/{id}/` - Get resource details
+- `PUT /api/resources/{id}/` - Update resource
+- `DELETE /api/resources/{id}/` - Delete resource
+- `POST /api/resources/{id}/rate/` - Rate resource
+- `GET /api/resources/search/` - Search resources
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
+
+### Code Style
+- Follow PEP 8 for Python code
+- Use ESLint and Prettier for JavaScript/TypeScript
+- Write meaningful commit messages
+- Add tests for new features
+
+## Testing
+
+### Backend Tests
+```bash
+cd backend
+python manage.py test
+```
+
+### Frontend Tests
+```bash
+cd frontend
+npm test
+```
+
+## Deployment
+
+### Production Setup
+1. Set environment variables in `.env`
+2. Configure PostgreSQL database
+3. Set up Redis for caching
+4. Configure Nginx for static files
+5. Use Gunicorn for WSGI server
+
+### Environment Variables
+```bash
+DEBUG=False
+SECRET_KEY=your-secret-key
+DATABASE_URL=postgresql://user:pass@localhost/dbname
+REDIS_URL=redis://localhost:6379
+ALLOWED_HOSTS=yourdomain.com
+```
+
+## Troubleshooting
+
+### Common Issues
+- **CORS errors**: Check CORS settings in Django settings
+- **File upload fails**: Verify MEDIA_ROOT and file permissions
+- **Database connection**: Ensure PostgreSQL is running
+- **Frontend build fails**: Clear node_modules and reinstall
+
+## Roadmap
+
+- [ ] Mobile app development (React Native)
+- [ ] AI-powered resource recommendations
+- [ ] Integration with university LMS systems
+- [ ] Video streaming capabilities
+- [ ] Collaborative study rooms
+- [ ] Gamification features
+- [ ] Multi-university network
+
 ## Links
-- [Project Repository](your-repo-url)
+- [Project Repository](https://github.com/Ajang-Deng98/studyshare)
 - [API Documentation](API_Documentation.md)
 - [Setup Guide](setup.md)
+- [Live Demo](https://studyshare-demo.com)
+- [Bug Reports](https://github.com/Ajang-Deng98/studyshare/issues)
 
 ## License
 MIT License
+
+## Acknowledgments
+- African Development Bank for inspiration
+- Open source community for tools and libraries
+- Beta testers from various African universities
+- Contributors and maintainers
