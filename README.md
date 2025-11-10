@@ -139,15 +139,21 @@ The platform promotes collaborative learning by allowing users to rate resources
 
 ## Project Structure
 ```
-formative_1_group3/
+studyshare/
+├── .github/
+│   └── workflows/
+│       └── ci.yml           # GitHub Actions CI pipeline
 ├── backend/
 │   ├── studyshare/          # Django project settings
 │   ├── api/                 # Main API application
 │   │   ├── models.py        # Database models
 │   │   ├── views.py         # API endpoints
 │   │   ├── serializers.py   # Data serialization
+│   │   ├── tests.py         # Backend tests
 │   │   └── urls.py          # URL routing
 │   ├── media/               # Uploaded files
+│   ├── .flake8             # Python linting configuration
+│   ├── Dockerfile          # Backend container configuration
 │   └── requirements.txt     # Python dependencies
 ├── frontend/
 │   ├── src/
@@ -155,10 +161,15 @@ formative_1_group3/
 │   │   ├── pages/           # Page components
 │   │   ├── hooks/           # Custom React hooks
 │   │   ├── types/           # TypeScript interfaces
-│   │   └── utils/           # Utility functions
+│   │   ├── utils/           # Utility functions
+│   │   └── App.test.tsx     # Frontend tests
 │   ├── public/              # Static assets
+│   ├── Dockerfile          # Frontend container configuration
 │   └── package.json         # Node.js dependencies
-└── README.md
+├── .dockerignore           # Docker build exclusions
+├── docker-compose.yml      # Multi-container orchestration
+├── README.md
+└── LICENSE
 ```
 
 ## Links
