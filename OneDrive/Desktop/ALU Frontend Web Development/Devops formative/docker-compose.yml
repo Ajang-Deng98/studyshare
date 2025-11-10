@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database service
+  db:
+    image: postgres:15-alpine
+    container_name: studyshare_db
+    environment:
+      POSTGRES_DB: studyshare_db
+      POSTGRES_USER: studyshare_user
+      POSTGRES_PASSWORD: studyshare_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - studyshare_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studyshare_user -d studyshare_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis cache service
+  redis:
+    image: redis:7-alpine
+    container_name: studyshare_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - studyshare_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # StudyShare web application
+  web:
+    build: .
+    container_name: studyshare_web
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=django-insecure-change-in-production
+      - DATABASE_URL=postgresql://studyshare_user:studyshare_password@db:5432/studyshare_db
+      - REDIS_URL=redis://redis:6379/0
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+    volumes:
+      - media_files:/app/media
+      - static_files:/app/staticfiles
+    networks:
+      - studyshare_network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 studyshare.wsgi:application"
+
+  # Development frontend (optional)
+  frontend-dev:
+    build:
+      context: ./studyshare/frontend
+      dockerfile: Dockerfile.dev
+    container_name: studyshare_frontend_dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./studyshare/frontend:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000/api
+    networks:
+      - studyshare_network
+    profiles:
+      - dev
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_files:
+  static_files:
+
+networks:
+  studyshare_network:
+    driver: bridge
