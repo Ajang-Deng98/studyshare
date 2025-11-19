@@ -1,0 +1,74 @@
+---
+- name: Deploy StudyShare Application
+  hosts: app_servers
+  become: yes
+  vars:
+    app_name: studyshare
+    app_dir: /opt/studyshare
+    docker_compose_version: "2.21.0"
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      apt:
+        name:
+          - docker.io
+          - docker-compose-plugin
+          - awscli
+          - unzip
+        state: present
+
+    - name: Start and enable Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add ubuntu user to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Create application directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+
+    - name: Login to ECR
+      shell: |
+        aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ ecr_repository_url }}
+      become_user: ubuntu
+      environment:
+        AWS_DEFAULT_REGION: "{{ aws_region }}"
+
+    - name: Create docker-compose.yml
+      template:
+        src: docker-compose.yml.j2
+        dest: "{{ app_dir }}/docker-compose.yml"
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Pull and start application
+      shell: |
+        cd {{ app_dir }}
+        docker compose pull
+        docker compose up -d
+      become_user: ubuntu
+      environment:
+        AWS_DEFAULT_REGION: "{{ aws_region }}"
+
+    - name: Wait for application to be ready
+      wait_for:
+        port: 8000
+        host: localhost
+        delay: 10
+        timeout: 300

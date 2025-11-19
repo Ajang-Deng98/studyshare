@@ -1,0 +1,19 @@
+---
+# AWS Configuration
+aws_region: us-east-1
+
+# Application Configuration
+app_name: studyshare
+app_version: latest
+ecr_repository_url: "{{ lookup('env', 'ECR_REPOSITORY_URL') }}"
+
+# Database Configuration
+db_host: "{{ lookup('env', 'DB_HOST') }}"
+db_name: studyshare
+db_user: "{{ lookup('env', 'DB_USER') }}"
+db_password: "{{ lookup('env', 'DB_PASSWORD') }}"
+
+# Infrastructure
+bastion_public_ip: "{{ lookup('env', 'BASTION_PUBLIC_IP') }}"
+app_server_private_ip: "{{ lookup('env', 'APP_SERVER_PRIVATE_IP') }}"
+ssh_private_key_path: "{{ lookup('env', 'SSH_PRIVATE_KEY_PATH') }}"

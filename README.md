@@ -39,17 +39,36 @@ The platform promotes collaborative learning by allowing users to rate resources
 ## Technology Stack
 - **Backend**: Django REST Framework (Python)
 - **Frontend**: React + TypeScript + Tailwind CSS
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL (AWS RDS)
 - **Authentication**: JWT (JSON Web Tokens)
-- **File Storage**: Local file system with download API
-- **Caching**: Redis for session management
-- **Search Engine**: Elasticsearch for advanced search capabilities
-- **File Processing**: Celery for background tasks
-- **API Documentation**: Swagger/OpenAPI
-- **Testing**: Jest (Frontend), Pytest (Backend)
-- **Deployment**: Docker, Nginx, Gunicorn
-- **Monitoring**: Sentry for error tracking
+- **Infrastructure**: AWS (VPC, EC2, RDS, ECR, ALB)
+- **Deployment**: Docker, Terraform, Ansible
+- **CI/CD**: GitHub Actions with security scanning
+- **Container Registry**: AWS ECR
+- **Security**: Trivy, tfsec, CodeQL
 - **Other**: Axios for API calls, React Router for navigation
+
+## Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Internet      │────│  Application     │────│   RDS           │
+│   Gateway       │    │  Load Balancer   │    │   PostgreSQL    │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                │
+                       ┌────────┴────────┐
+                       │                 │
+              ┌─────────────────┐ ┌─────────────────┐
+              │  Public Subnet  │ │ Private Subnet  │
+              │                 │ │                 │
+              │ ┌─────────────┐ │ │ ┌─────────────┐ │
+              │ │   Bastion   │ │ │ │ App Server  │ │
+              │ │    Host     │ │ │ │  (Docker)   │ │
+              │ └─────────────┘ │ │ └─────────────┘ │
+              └─────────────────┘ └─────────────────┘
+```
+
+**Live Application**: [Will be updated after deployment]
 
 ## Getting Started
 
@@ -157,32 +176,38 @@ The platform promotes collaborative learning by allowing users to rate resources
 studyshare/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml           # GitHub Actions CI pipeline
+│       ├── ci.yml           # CI pipeline with security scanning
+│       └── cd.yml           # CD pipeline for deployment
+├── terraform/
+│   ├── main.tf             # Main infrastructure configuration
+│   ├── variables.tf        # Input variables
+│   ├── outputs.tf          # Output values
+│   ├── network.tf          # VPC and networking
+│   ├── compute.tf          # EC2 instances and load balancer
+│   ├── database.tf         # RDS configuration
+│   ├── security.tf         # Security groups
+│   ├── registry.tf         # ECR repository
+│   └── user_data.sh        # EC2 initialization script
+├── ansible/
+│   ├── playbook.yml        # Main deployment playbook
+│   ├── inventory.yml       # Host inventory
+│   ├── group_vars/
+│   │   └── all.yml         # Global variables
+│   └── templates/
+│       └── docker-compose.yml.j2  # Production compose template
 ├── backend/
 │   ├── studyshare/          # Django project settings
 │   ├── api/                 # Main API application
-│   │   ├── models.py        # Database models
-│   │   ├── views.py         # API endpoints
-│   │   ├── serializers.py   # Data serialization
-│   │   ├── tests.py         # Backend tests
-│   │   └── urls.py          # URL routing
-│   ├── media/               # Uploaded files
 │   ├── .flake8             # Python linting configuration
 │   ├── Dockerfile          # Backend container configuration
 │   └── requirements.txt     # Python dependencies
 ├── frontend/
-│   ├── src/
-│   │   ├── components/      # Reusable React components
-│   │   ├── pages/           # Page components
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── types/           # TypeScript interfaces
-│   │   ├── utils/           # Utility functions
-│   │   └── App.test.tsx     # Frontend tests
-│   ├── public/              # Static assets
+│   ├── src/                # React application source
 │   ├── Dockerfile          # Frontend container configuration
 │   └── package.json         # Node.js dependencies
 ├── .dockerignore           # Docker build exclusions
-├── docker-compose.yml      # Multi-container orchestration
+├── docker-compose.yml      # Development orchestration
+├── Dockerfile              # Production multi-stage build
 ├── README.md
 └── LICENSE
 ```
