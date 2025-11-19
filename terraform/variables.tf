@@ -49,4 +49,18 @@ variable "db_password" {
 variable "key_pair_name" {
   description = "AWS Key Pair name for EC2 instances"
   type        = string
+  default     = "studyshare-key"
+}
+
+variable "TF_VAR_key_pair_name" {
+  description = "AWS Key Pair name for EC2 instances (TF_VAR format)"
+  type        = string
+  default     = "studyshare-key"
+}
+
+variable "TF_VAR_db_password" {
+  description = "Database password (TF_VAR format)"
+  type        = string
+  sensitive   = true
+  default     = "SecurePassword123!"
 }

@@ -19,7 +19,7 @@ resource "aws_db_instance" "main" {
   
   db_name  = "studyshare"
   username = var.db_username
-  password = var.db_password
+  password = var.TF_VAR_db_password
   
   vpc_security_group_ids = [aws_security_group.rds.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
