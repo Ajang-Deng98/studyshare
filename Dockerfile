@@ -4,10 +4,8 @@ FROM node:18-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm ci
-COPY frontend/src ./src
-COPY frontend/public ./public
-COPY frontend/tsconfig.json frontend/tailwind.config.js frontend/postcss.config.js ./
-RUN GENERATE_SOURCEMAP=false npm run build
+COPY frontend/ ./
+RUN TSC_COMPILE_ON_ERROR=true GENERATE_SOURCEMAP=false npm run build
 
 # Production backend stage
 FROM python:3.11-slim
