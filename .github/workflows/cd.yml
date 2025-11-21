@@ -43,7 +43,11 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.BASTION_PUBLIC_IP }} >> ~/.ssh/known_hosts
+        if [ -n "${{ secrets.BASTION_PUBLIC_IP }}" ]; then
+          ssh-keyscan -H ${{ secrets.BASTION_PUBLIC_IP }} >> ~/.ssh/known_hosts
+        else
+          echo "Warning: BASTION_PUBLIC_IP not set, skipping SSH keyscan"
+        fi
     
     - name: Install Ansible
       run: |
