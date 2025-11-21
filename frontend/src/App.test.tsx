@@ -1,14 +1,9 @@
 import React from 'react';
+import { render, screen } from '@testing-library/react';
+import App from './App';
 
-test('basic functionality test', () => {
-  const result = 2 + 2;
-  expect(result).toBe(4);
-});
-
-test('react import works', () => {
-  expect(React).toBeDefined();
-});
-
-test('environment test', () => {
-  expect(process.env.NODE_ENV).toBeDefined();
+test('renders learn react link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/StudyShare/i);
+  expect(linkElement).toBeInTheDocument();
 });
