@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "jsdom": "^27.2.0",
+    "ts-jest": "^29.4.5"
+  }
+}

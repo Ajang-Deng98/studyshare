@@ -8,37 +8,79 @@
     docker_compose_version: "2.21.0"
 
   tasks:
+    - name: Fix Docker repository conflicts
+      shell: |
+        rm -f /etc/apt/sources.list.d/docker.list
+        rm -f /etc/apt/sources.list.d/docker.list.save
+        rm -f /usr/share/keyrings/docker-archive-keyring.gpg
+        rm -f /etc/apt/keyrings/docker.gpg
+        apt-get clean
+      ignore_errors: yes
+
     - name: Update apt cache
       apt:
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Install Docker using snap
+    - name: Remove snap Docker if present
       snap:
         name: docker
-        state: present
+        state: absent
       ignore_errors: yes
 
-    - name: Install required packages
+    - name: Remove all Docker packages
+      shell: |
+        apt-get remove -y docker docker-engine docker.io containerd runc containerd.io docker-ce docker-ce-cli docker-compose-plugin
+        apt-get autoremove -y
+        apt-get autoclean
+        rm -f /etc/apt/sources.list.d/docker*
+        rm -f /usr/share/keyrings/docker*
+        rm -f /etc/apt/keyrings/docker*
+        apt-get update
+      ignore_errors: yes
+
+    - name: Install Docker from Ubuntu repository
       apt:
         name:
+          - docker.io
+          - docker-compose
           - awscli
           - unzip
           - curl
         state: present
+        update_cache: yes
+
+    - name: Check Docker service status
+      shell: systemctl status docker
+      register: docker_status
+      ignore_errors: yes
+
+    - name: Debug Docker service
+      debug:
+        var: docker_status
+
+    - name: Fix Docker service if needed
+      shell: |
+        systemctl daemon-reload
+        systemctl reset-failed docker
+        systemctl start docker
+      ignore_errors: yes
 
     - name: Start and enable Docker
       systemd:
-        name: snap.docker.dockerd
+        name: docker
         state: started
         enabled: yes
-      ignore_errors: yes
+        daemon_reload: yes
 
     - name: Add ubuntu user to docker group
       user:
         name: ubuntu
         groups: docker
         append: yes
+
+    - name: Reset ssh connection to allow user changes to affect ansible user
+      meta: reset_connection
 
     - name: Create application directory
       file:
@@ -72,7 +114,6 @@
       become_user: ubuntu
       environment:
         AWS_DEFAULT_REGION: "{{ aws_region }}"
-        PATH: "/snap/bin:{{ ansible_env.PATH }}"
 
     - name: Create docker-compose.yml
       template:
@@ -109,6 +150,11 @@
         echo "=== Frontend directory contents ==="
         ls -la {{ app_dir }}/studyshare/frontend/ 2>/dev/null || echo "Frontend directory not found"
       become_user: ubuntu
+      register: debug_output
+
+    - name: Display debug output
+      debug:
+        var: debug_output.stdout_lines
 
     - name: Set proper permissions on repository
       file:
@@ -118,6 +164,38 @@
         recurse: yes
         mode: '0755'
 
+    - name: Create backend Dockerfile if missing
+      copy:
+        content: |
+          FROM python:3.11-slim
+          ENV PYTHONDONTWRITEBYTECODE=1 \
+              PYTHONUNBUFFERED=1 \
+              PIP_NO_CACHE_DIR=1 \
+              PIP_DISABLE_PIP_VERSION_CHECK=1
+          RUN groupadd -r appuser && useradd -r -g appuser appuser
+          WORKDIR /app
+          RUN apt-get update && apt-get install -y \
+              --no-install-recommends \
+              && rm -rf /var/lib/apt/lists/* || true
+          COPY requirements.txt .
+          RUN pip install --no-cache-dir -r requirements.txt
+          COPY . .
+          RUN mkdir -p media static && \
+              chown -R appuser:appuser /app
+          USER appuser
+          EXPOSE 8000
+          CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+        dest: "{{ app_dir }}/studyshare/backend/Dockerfile"
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+      when: not (ansible_stat_result.stat.exists | default(false))
+
+    - name: Check if backend Dockerfile exists
+      stat:
+        path: "{{ app_dir }}/studyshare/backend/Dockerfile"
+      register: backend_dockerfile
+
     - name: Build backend Docker image
       shell: |
         cd {{ app_dir }}/studyshare/backend
@@ -125,7 +203,33 @@
       become_user: ubuntu
       environment:
         AWS_DEFAULT_REGION: "{{ aws_region }}"
-        PATH: "/snap/bin:{{ ansible_env.PATH }}"
+      when: backend_dockerfile.stat.exists
+
+    - name: Create frontend Dockerfile if missing
+      copy:
+        content: |
+          FROM node:18-alpine
+          ENV NODE_ENV=development
+          RUN addgroup -g 1001 -S nodejs && \
+              adduser -S nextjs -u 1001
+          WORKDIR /app
+          COPY package*.json ./
+          RUN npm install && npm cache clean --force
+          COPY . .
+          RUN chown -R nextjs:nodejs /app
+          USER nextjs
+          EXPOSE 3000
+          CMD ["npm", "start"]
+        dest: "{{ app_dir }}/studyshare/frontend/Dockerfile"
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+      when: not (ansible_stat_result.stat.exists | default(false))
+
+    - name: Check if frontend Dockerfile exists
+      stat:
+        path: "{{ app_dir }}/studyshare/frontend/Dockerfile"
+      register: frontend_dockerfile
 
     - name: Build frontend Docker image
       shell: |
@@ -134,7 +238,7 @@
       become_user: ubuntu
       environment:
         AWS_DEFAULT_REGION: "{{ aws_region }}"
-        PATH: "/snap/bin:{{ ansible_env.PATH }}"
+      when: frontend_dockerfile.stat.exists
 
     - name: Push backend image to ECR
       shell: |
@@ -142,7 +246,6 @@
       become_user: ubuntu
       environment:
         AWS_DEFAULT_REGION: "{{ aws_region }}"
-        PATH: "/snap/bin:{{ ansible_env.PATH }}"
 
     - name: Push frontend image to ECR
       shell: |
@@ -150,16 +253,14 @@
       become_user: ubuntu
       environment:
         AWS_DEFAULT_REGION: "{{ aws_region }}"
-        PATH: "/snap/bin:{{ ansible_env.PATH }}"
 
     - name: Start application
       shell: |
         cd {{ app_dir }}
-        docker compose -f docker-compose.yml up -d
+        docker-compose -f docker-compose.yml up -d
       become_user: ubuntu
       environment:
         AWS_DEFAULT_REGION: "{{ aws_region }}"
-        PATH: "/snap/bin:{{ ansible_env.PATH }}"
 
     - name: Wait for backend to be ready
       wait_for:
