@@ -8,8 +8,10 @@ test('renders StudyShare navigation link', () => {
   expect(linkElement).toBeInTheDocument();
 });
 
-test('renders main heading', () => {
+test('renders main heading parts', () => {
   render(<App />);
-  const headingElement = screen.getByText(/Share Knowledge, Learn Together/i);
-  expect(headingElement).toBeInTheDocument();
+  const shareKnowledge = screen.getByText(/Share Knowledge,/i);
+  const learnTogether = screen.getByText(/Learn Together/i);
+  expect(shareKnowledge).toBeInTheDocument();
+  expect(learnTogether).toBeInTheDocument();
 });
