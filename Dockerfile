@@ -3,9 +3,9 @@ FROM node:18-alpine AS frontend-build
 
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 COPY frontend/ ./
-RUN npm run build
+RUN CI=true npm run build
 
 # Production backend stage
 FROM python:3.11-slim
