@@ -12,7 +12,7 @@ services:
       - DB_USER={{ db_user }}
       - DB_PASSWORD={{ db_password }}
       - DB_PORT=5432
-      - SECRET_KEY={{ lookup('env', 'SECRET_KEY') }}
+      - SECRET_KEY={{ vault_secret_key }}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]

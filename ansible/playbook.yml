@@ -13,20 +13,26 @@
         update_cache: yes
         cache_valid_time: 3600
 
+    - name: Install Docker using snap
+      snap:
+        name: docker
+        state: present
+      ignore_errors: yes
+
     - name: Install required packages
       apt:
         name:
-          - docker.io
-          - docker-compose-plugin
           - awscli
           - unzip
+          - curl
         state: present
 
     - name: Start and enable Docker
       systemd:
-        name: docker
+        name: snap.docker.dockerd
         state: started
         enabled: yes
+      ignore_errors: yes
 
     - name: Add ubuntu user to docker group
       user:
@@ -42,9 +48,27 @@
         group: ubuntu
         mode: '0755'
 
+    - name: Build application locally
+      shell: |
+        TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+        ROLE_NAME=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/iam/security-credentials/)
+        if [ ! -z "$ROLE_NAME" ]; then
+          echo "Using IAM role: $ROLE_NAME"
+        else
+          echo "No IAM role found, configuring temporary credentials"
+          mkdir -p /home/ubuntu/.aws
+          echo "[default]" > /home/ubuntu/.aws/credentials
+          echo "aws_access_key_id = PLACEHOLDER" >> /home/ubuntu/.aws/credentials
+          echo "aws_secret_access_key = PLACEHOLDER" >> /home/ubuntu/.aws/credentials
+          echo "[default]" > /home/ubuntu/.aws/config
+          echo "region = {{ aws_region }}" >> /home/ubuntu/.aws/config
+          chown -R ubuntu:ubuntu /home/ubuntu/.aws
+        fi
+      become: yes
+
     - name: Login to ECR
       shell: |
-        aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ ecr_repository_url }}
+        aws ecr get-login-password --region {{ aws_region }} | /snap/bin/docker login --username AWS --password-stdin {{ ecr_repository_url }}
       become_user: ubuntu
       environment:
         AWS_DEFAULT_REGION: "{{ aws_region }}"
@@ -59,12 +83,13 @@
 
     - name: Pull and start application
       shell: |
-        cd {{ app_dir }}
-        docker compose pull
-        docker compose up -d
+        /snap/bin/docker compose -f /opt/studyshare/docker-compose.yml up -d
+      args:
+        chdir: /opt/studyshare
       become_user: ubuntu
       environment:
         AWS_DEFAULT_REGION: "{{ aws_region }}"
+      ignore_errors: yes
 
     - name: Wait for application to be ready
       wait_for:
