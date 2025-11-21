@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi?.fn?.() || (() => ({
+  value: () => ({
     matches: false,
     media: '',
     onchange: null,
@@ -16,19 +16,5 @@ Object.defineProperty(window, 'matchMedia', {
     addEventListener: () => {},
     removeEventListener: () => {},
     dispatchEvent: () => {},
-  })),
+  }),
 });
-
-// Fallback for when jest is not available in setup
-if (typeof window !== 'undefined' && !window.matchMedia) {
-  window.matchMedia = () => ({
-    matches: false,
-    media: '',
-    onchange: null,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    dispatchEvent: () => {},
-  });
-}
