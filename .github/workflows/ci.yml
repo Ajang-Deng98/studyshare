@@ -1,5 +1,10 @@
 name: CI Pipeline
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 on:
   push:
     branches:
@@ -121,9 +126,9 @@ jobs:
     - name: Run tfsec
       run: |
         if [ -d "terraform/" ]; then
-          tfsec terraform/ --format sarif --out tfsec-results.sarif || echo "{}" > tfsec-results.sarif
+          tfsec terraform/ --format sarif --out tfsec-results.sarif || echo '{"version":"2.1.0","runs":[]}' > tfsec-results.sarif
         else
-          echo "{}" > tfsec-results.sarif
+          echo '{"version":"2.1.0","runs":[]}' > tfsec-results.sarif
         fi
     
     - name: Upload tfsec scan results
