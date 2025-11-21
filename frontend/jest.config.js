@@ -9,10 +9,10 @@ module.exports = {
     "node_modules/(?!(axios)/)"
   ],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  globals: {
-    'ts-jest': {
+  transform: {
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
       useESM: true
-    }
+    }]
   },
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
