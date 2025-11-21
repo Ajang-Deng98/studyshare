@@ -44,13 +44,20 @@ jobs:
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         
+        # Validate required secrets
+        if [ -z "${{ secrets.BASTION_PUBLIC_IP }}" ] || [ -z "${{ secrets.APP_SERVER_PRIVATE_IP }}" ]; then
+          echo "Error: BASTION_PUBLIC_IP and APP_SERVER_PRIVATE_IP secrets must be set"
+          exit 1
+        fi
+        
         # Add SSH config for bastion host
-        cat >> ~/.ssh/config << EOF
+        cat > ~/.ssh/config << EOF
         Host bastion
           HostName ${{ secrets.BASTION_PUBLIC_IP }}
           User ubuntu
           IdentityFile ~/.ssh/id_rsa
           StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
         
         Host app_server
           HostName ${{ secrets.APP_SERVER_PRIVATE_IP }}
@@ -58,12 +65,11 @@ jobs:
           IdentityFile ~/.ssh/id_rsa
           ProxyJump bastion
           StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
         EOF
         
-        # Add known hosts
-        if [ -n "${{ secrets.BASTION_PUBLIC_IP }}" ]; then
-          ssh-keyscan -H ${{ secrets.BASTION_PUBLIC_IP }} >> ~/.ssh/known_hosts
-        fi
+        echo "SSH config created:"
+        cat ~/.ssh/config
     
     - name: Install Ansible
       run: |
