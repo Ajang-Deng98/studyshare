@@ -54,19 +54,39 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ansible
     
-    - name: Deploy with Ansible
-      env:
-        ECR_REPOSITORY_URL: ${{ steps.login-ecr.outputs.registry }}/studyshare-app
-        DB_HOST: ${{ secrets.DB_HOST }}
-        DB_USER: ${{ secrets.DB_USER }}
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        BASTION_PUBLIC_IP: ${{ secrets.BASTION_PUBLIC_IP }}
-        APP_SERVER_PRIVATE_IP: ${{ secrets.APP_SERVER_PRIVATE_IP }}
-        SSH_PRIVATE_KEY_PATH: ~/.ssh/id_rsa
+    - name: Create dynamic inventory
       run: |
         cd ansible
-        ansible-playbook -i inventory.yml playbook.yml -v
+        cat > inventory.yml << EOF
+        all:
+          children:
+            app_servers:
+              hosts:
+                app_server:
+                  ansible_host: "${{ secrets.APP_SERVER_PRIVATE_IP }}"
+                  ansible_user: ubuntu
+                  ansible_ssh_private_key_file: ~/.ssh/id_rsa
+                  ansible_ssh_common_args: '-o ProxyCommand="ssh -W %h:%p -i ~/.ssh/id_rsa ubuntu@${{ secrets.BASTION_PUBLIC_IP }}"'
+        EOF
+    
+    - name: Create Ansible variables
+      run: |
+        cd ansible
+        cat > deploy_vars.yml << EOF
+        ecr_repository_url: "${{ steps.login-ecr.outputs.registry }}/studyshare-app"
+        app_version: "latest"
+        aws_region: "us-east-1"
+        db_host: "${{ secrets.DB_HOST }}"
+        db_name: "studyshare"
+        db_user: "${{ secrets.DB_USER }}"
+        db_password: "${{ secrets.DB_PASSWORD }}"
+        vault_secret_key: "${{ secrets.SECRET_KEY }}"
+        EOF
+    
+    - name: Deploy with Ansible
+      run: |
+        cd ansible
+        ansible-playbook -i inventory.yml playbook.yml -e @deploy_vars.yml -v
     
     - name: Health check
       run: |
