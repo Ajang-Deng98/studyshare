@@ -1,8 +1,8 @@
 version: '3.8'
 
 services:
-  app:
-    image: {{ ecr_repository_url }}:{{ app_version }}
+  backend:
+    image: {{ ecr_repository_url }}-backend:{{ app_version }}
     ports:
       - "8000:8000"
     environment:
@@ -20,3 +20,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  frontend:
+    image: {{ ecr_repository_url }}-frontend:{{ app_version }}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
