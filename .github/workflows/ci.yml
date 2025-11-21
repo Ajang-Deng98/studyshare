@@ -115,7 +115,7 @@ jobs:
     
     - name: Upload Trivy scan results
       uses: github/codeql-action/upload-sarif@v3
-      if: always()
+      if: always() && hashFiles('trivy-results.sarif') != ''
       with:
         sarif_file: 'trivy-results.sarif'
     
@@ -126,14 +126,14 @@ jobs:
     - name: Run tfsec
       run: |
         if [ -d "terraform/" ]; then
-          tfsec terraform/ --format sarif --out tfsec-results.sarif || echo '{"version":"2.1.0","runs":[]}' > tfsec-results.sarif
+          tfsec terraform/ --format sarif --out tfsec-results.sarif || echo "tfsec scan completed with issues"
         else
-          echo '{"version":"2.1.0","runs":[]}' > tfsec-results.sarif
+          echo "No terraform directory found, skipping tfsec scan"
         fi
     
     - name: Upload tfsec scan results
       uses: github/codeql-action/upload-sarif@v3
-      if: always()
+      if: always() && hashFiles('tfsec-results.sarif') != ''
       with:
         sarif_file: 'tfsec-results.sarif'
 
