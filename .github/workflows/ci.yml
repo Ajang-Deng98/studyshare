@@ -81,9 +81,7 @@ jobs:
     - name: Run frontend tests
       working-directory: ./frontend
       run: |
-        npm test -- --coverage --watchAll=false --passWithNoTests --transformIgnorePatterns="node_modules/(?!(axios)/)"
-      env:
-        NODE_OPTIONS: --experimental-vm-modules
+        npm test -- --coverage --watchAll=false --passWithNoTests --testPathIgnorePatterns=[]
     
     - name: Build frontend
       working-directory: ./frontend
