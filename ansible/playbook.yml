@@ -239,7 +239,18 @@
 
     - name: Verify application is running
       shell: |
-        docker ps
-        curl -f http://localhost:8000/ || echo "App not ready yet"
+        echo "=== Docker containers ==="
+        docker ps -a
+        echo "=== Port 8000 status ==="
+        netstat -tlnp | grep :8000 || echo "Port 8000 not listening"
+        echo "=== Application logs ==="
+        docker logs studyshare-app-1 --tail 20 || echo "No logs available"
+        echo "=== Test local connection ==="
+        curl -v http://localhost:8000/ || echo "Local connection failed"
       become_user: ubuntu
       ignore_errors: yes
+      register: app_status
+
+    - name: Display application status
+      debug:
+        var: app_status.stdout_lines
