@@ -119,17 +119,11 @@ jobs:
       with:
         sarif_file: 'trivy-results.sarif'
     
-    - name: Install tfsec
-      run: |
-        curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
-    
     - name: Run tfsec
-      run: |
-        if [ -d "terraform/" ]; then
-          tfsec terraform/ --format sarif --out tfsec-results.sarif || echo "tfsec scan completed with issues"
-        else
-          echo "No terraform directory found, skipping tfsec scan"
-        fi
+      uses: aquasecurity/tfsec-action@v1.0.3
+      with:
+        soft_fail: true
+      if: hashFiles('terraform/**/*.tf') != ''
     
     - name: Upload tfsec scan results
       uses: github/codeql-action/upload-sarif@v3
