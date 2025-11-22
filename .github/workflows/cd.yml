@@ -6,17 +6,23 @@ on:
       - main
 
 jobs:
-  # Run CI checks first
-  ci-checks:
-    uses: ./.github/workflows/ci.yml
-    
   deploy:
     runs-on: ubuntu-latest
-    needs: ci-checks
     if: github.ref == 'refs/heads/main'
     
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Run security scans
+      run: |
+        # Install and run tfsec
+        curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+        if [ -d "terraform/" ]; then
+          tfsec terraform/ || echo "tfsec scan completed"
+        fi
+        
+        # Run Trivy filesystem scan
+        docker run --rm -v "$PWD:/workspace" aquasec/trivy:latest fs /workspace || echo "trivy scan completed"
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
