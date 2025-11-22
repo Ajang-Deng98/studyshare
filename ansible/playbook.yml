@@ -101,22 +101,15 @@
         group: ubuntu
         mode: '0755'
 
-    - name: Build application locally
+    - name: Configure AWS credentials
       shell: |
-        TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-        ROLE_NAME=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/iam/security-credentials/)
-        if [ ! -z "$ROLE_NAME" ]; then
-          echo "Using IAM role: $ROLE_NAME"
-        else
-          echo "No IAM role found, configuring temporary credentials"
-          mkdir -p /home/ubuntu/.aws
-          echo "[default]" > /home/ubuntu/.aws/credentials
-          echo "aws_access_key_id = PLACEHOLDER" >> /home/ubuntu/.aws/credentials
-          echo "aws_secret_access_key = PLACEHOLDER" >> /home/ubuntu/.aws/credentials
-          echo "[default]" > /home/ubuntu/.aws/config
-          echo "region = {{ aws_region }}" >> /home/ubuntu/.aws/config
-          chown -R ubuntu:ubuntu /home/ubuntu/.aws
-        fi
+        mkdir -p /home/ubuntu/.aws
+        echo "[default]" > /home/ubuntu/.aws/credentials
+        echo "aws_access_key_id = {{ aws_access_key_id }}" >> /home/ubuntu/.aws/credentials
+        echo "aws_secret_access_key = {{ aws_secret_access_key }}" >> /home/ubuntu/.aws/credentials
+        echo "[default]" > /home/ubuntu/.aws/config
+        echo "region = {{ aws_region }}" >> /home/ubuntu/.aws/config
+        chown -R ubuntu:ubuntu /home/ubuntu/.aws
       become: yes
 
     - name: Login to ECR

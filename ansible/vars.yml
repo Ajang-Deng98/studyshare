@@ -1,6 +1,6 @@
 ---
 # Infrastructure variables from Terraform outputs
-app_server_private_ip: "10.0.2.36"
+app_server_private_ip: "10.0.1.18"
 bastion_public_ip: "98.80.211.118"
 ssh_private_key_path: "../studyshare-key-2.pem"
 
@@ -8,6 +8,8 @@ ssh_private_key_path: "../studyshare-key-2.pem"
 aws_region: "us-east-1"
 ecr_repository_url: "436119632580.dkr.ecr.us-east-1.amazonaws.com/studyshare-app"
 app_version: "latest"
+aws_access_key_id: "{{ vault_aws_access_key_id }}"
+aws_secret_access_key: "{{ vault_aws_secret_access_key }}"
 
 # Database configuration
 db_host: "studyshare-db.c0v22u8o00d6.us-east-1.rds.amazonaws.com"

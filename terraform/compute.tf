@@ -16,9 +16,8 @@ resource "aws_instance" "app_server" {
   ami                    = local.ubuntu_ami
   instance_type          = "t3.small"
   key_name              = var.TF_VAR_key_pair_name
-  subnet_id             = aws_subnet.private.id
+  subnet_id             = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.app_server.id]
-  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
   user_data_base64 = base64encode(templatefile("${path.module}/user_data.sh", {
     ecr_repository_url = aws_ecr_repository.app.repository_url
@@ -35,7 +34,7 @@ resource "aws_lb" "main" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets           = [aws_subnet.public.id, aws_subnet.private.id]
+  subnets           = [aws_subnet.public.id, aws_subnet.public_2.id]
 
   tags = {
     Name = "${var.project_name}-alb"
