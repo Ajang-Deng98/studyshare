@@ -51,11 +51,11 @@ resource "aws_lb_target_group" "app" {
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    unhealthy_threshold = 2
-    timeout             = 5
+    unhealthy_threshold = 10
+    timeout             = 10
     interval            = 30
     path                = "/"
-    matcher             = "200"
+    matcher             = "200,404"
   }
 
   tags = {
