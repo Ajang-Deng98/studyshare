@@ -244,7 +244,7 @@
         echo "=== Port 8000 status ==="
         netstat -tlnp | grep :8000 || echo "Port 8000 not listening"
         echo "=== Application logs ==="
-        docker logs studyshare-app-1 --tail 20 || echo "No logs available"
+        docker logs studyshare-app-1 --tail 20 2>/dev/null || docker logs studyshare_app_1 --tail 20 2>/dev/null || echo "No app container found"
         echo "=== Test local connection ==="
         curl -v http://localhost:8000/ || echo "Local connection failed"
       become_user: ubuntu
