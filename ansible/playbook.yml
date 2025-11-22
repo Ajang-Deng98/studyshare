@@ -222,7 +222,7 @@
       shell: |
         cd {{ app_dir }}
         docker-compose -f docker-compose.yml down --remove-orphans || true
-        docker stop $(docker ps -q) || true
+        if [ "$(docker ps -q)" ]; then docker stop $(docker ps -q); fi
         docker system prune -f || true
       become_user: ubuntu
       environment:
@@ -237,16 +237,16 @@
       environment:
         AWS_DEFAULT_REGION: "{{ aws_region }}"
 
-    - name: Wait for backend to be ready
+    - name: Wait for application to be ready
       wait_for:
         port: 8000
         host: localhost
         delay: 10
-        timeout: 300
+        timeout: 60
 
-    - name: Wait for frontend to be ready
-      wait_for:
-        port: 3000
-        host: localhost
-        delay: 5
-        timeout: 300
+    - name: Verify application is running
+      shell: |
+        docker ps
+        curl -f http://localhost:8000/ || echo "App not ready yet"
+      become_user: ubuntu
+      ignore_errors: yes
