@@ -110,6 +110,8 @@ jobs:
         db_user: "${{ secrets.DB_USER }}"
         db_password: "${{ secrets.DB_PASSWORD }}"
         vault_secret_key: "${{ secrets.SECRET_KEY }}"
+        aws_access_key_id: "${{ secrets.AWS_ACCESS_KEY_ID }}"
+        aws_secret_access_key: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
         EOF
     
     - name: Deploy with Ansible
