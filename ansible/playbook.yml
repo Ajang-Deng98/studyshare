@@ -50,30 +50,39 @@
         state: present
         update_cache: yes
 
-    - name: Check Docker service status
-      shell: systemctl status docker
-      register: docker_status
+    - name: Stop Docker services
+      shell: |
+        systemctl stop docker.socket || true
+        systemctl stop docker || true
+        systemctl stop containerd || true
       ignore_errors: yes
 
-    - name: Debug Docker service
-      debug:
-        var: docker_status
-
-    - name: Fix Docker service if needed
+    - name: Clean Docker data
       shell: |
-        systemctl daemon-reload
-        systemctl reset-failed docker
-        systemctl start docker
+        rm -rf /var/lib/docker/* || true
+        rm -rf /var/lib/containerd/* || true
       ignore_errors: yes
 
-    - name: Start and enable Docker
+    - name: Start containerd first
       shell: |
         systemctl daemon-reload
-        systemctl enable docker
-        systemctl restart docker
-        sleep 5
-        systemctl status docker
+        systemctl enable containerd
+        systemctl start containerd
+        sleep 3
       become: yes
+
+    - name: Start Docker service
+      shell: |
+        systemctl enable docker
+        systemctl start docker
+        sleep 5
+      become: yes
+
+    - name: Verify Docker is running
+      shell: docker --version
+      become_user: ubuntu
+      retries: 3
+      delay: 5
 
     - name: Add ubuntu user to docker group
       user:
