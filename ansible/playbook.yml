@@ -233,12 +233,12 @@
         docker-compose -f docker-compose.yml up -d --remove-orphans
       become_user: ubuntu
 
-    - name: Wait for application to be ready
+    - name: Wait for frontend to be ready
       wait_for:
-        port: 8000
+        port: 80
         host: localhost
-        delay: 10
-        timeout: 60
+        delay: 15
+        timeout: 120
 
     - name: Verify application is running
       shell: |

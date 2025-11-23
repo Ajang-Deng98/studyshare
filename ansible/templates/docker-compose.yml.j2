@@ -1,6 +1,8 @@
 services:
-  app:
-    image: {{ ecr_repository_url }}:{{ app_version }}
+  backend:
+    build:
+      context: ./studyshare/backend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
@@ -22,3 +24,15 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+
+  frontend:
+    build:
+      context: ./studyshare/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - REACT_APP_API_URL=http://{{ ansible_default_ipv4.address }}:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
