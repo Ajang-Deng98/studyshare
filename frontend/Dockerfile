@@ -1,8 +1,14 @@
-FROM node:18-alpine
+# Build stage
+FROM node:18-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+RUN REACT_APP_API_URL=/api npm run build
+
+# Production stage
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
-ENV PORT=80
-CMD ["npm", "start"]
+CMD ["nginx", "-g", "daemon off;"]
