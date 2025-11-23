@@ -59,6 +59,14 @@ resource "aws_security_group" "app_server" {
     security_groups = [aws_security_group.alb.id]
   }
 
+  # Frontend port from ALB
+  ingress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
