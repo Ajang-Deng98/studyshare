@@ -4,22 +4,72 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
+  security-and-quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run security scans
+      run: |
+        # Install and run tfsec
+        wget -q https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64 -O tfsec
+        chmod +x tfsec
+        ./tfsec terraform/ --format json --out tfsec-results.json || echo "tfsec completed"
+        
+        # Run Trivy filesystem scan
+        docker run --rm -v "$PWD:/workspace" aquasec/trivy:latest fs /workspace --format json --output trivy-results.json
+        
+        # Check for critical vulnerabilities
+        if [ -f "trivy-results.json" ]; then
+          CRITICAL_COUNT=$(cat trivy-results.json | jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length')
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "❌ Found $CRITICAL_COUNT critical vulnerabilities!"
+            exit 1
+          fi
+        fi
+    
+    - name: Lint Terraform
+      run: |
+        cd terraform
+        terraform fmt -check || (echo "Terraform files need formatting" && exit 1)
+    
+    - name: Validate Terraform
+      run: |
+        cd terraform
+        terraform init -backend=false
+        terraform validate
+
   deploy:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    needs: security-and-quality
     
     steps:
     - uses: actions/checkout@v4
     
     - name: Run security scans
       run: |
-        # Skip tfsec for now to avoid installation issues
-        echo "Skipping tfsec scan"
+        # Install and run tfsec
+        wget -q https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64 -O tfsec
+        chmod +x tfsec
+        ./tfsec terraform/ --format json --out tfsec-results.json || echo "tfsec completed"
         
         # Run Trivy filesystem scan
-        docker run --rm -v "$PWD:/workspace" aquasec/trivy:latest fs /workspace || echo "trivy scan completed"
+        docker run --rm -v "$PWD:/workspace" aquasec/trivy:latest fs /workspace --format json --output trivy-results.json
+        
+        # Check for critical vulnerabilities
+        if [ -f "trivy-results.json" ]; then
+          CRITICAL_COUNT=$(cat trivy-results.json | jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length')
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "❌ Found $CRITICAL_COUNT critical vulnerabilities!"
+            exit 1
+          fi
+        fi
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
