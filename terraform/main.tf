@@ -1,10 +1,10 @@
-terraform { 
-  cloud { 
-    organization = "studyshare" 
-    workspaces { 
-      name = "studyshare_workspace" 
-    } 
-  } 
+terraform {
+  cloud {
+    organization = "studyshare"
+    workspaces {
+      name = "studyshare_workspace"
+    }
+  }
 }
 
 provider "aws" {
@@ -20,6 +20,3 @@ data "aws_availability_zones" "available" {
 locals {
   ubuntu_ami = "ami-000c63f74be5cb1c7"
 }
-
-
-
