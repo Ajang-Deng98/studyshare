@@ -2,8 +2,8 @@
 resource "aws_instance" "bastion" {
   ami                    = local.ubuntu_ami
   instance_type          = "t3.micro"
-  key_name              = var.TF_VAR_key_pair_name
-  subnet_id             = aws_subnet.public.id
+  key_name               = var.TF_VAR_key_pair_name
+  subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.bastion.id]
 
   tags = {
@@ -15,8 +15,8 @@ resource "aws_instance" "bastion" {
 resource "aws_instance" "app_server" {
   ami                    = local.ubuntu_ami
   instance_type          = "t3.small"
-  key_name              = var.TF_VAR_key_pair_name
-  subnet_id             = aws_subnet.public.id
+  key_name               = var.TF_VAR_key_pair_name
+  subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.app_server.id]
 
   user_data_base64 = base64encode(templatefile("${path.module}/user_data.sh", {
