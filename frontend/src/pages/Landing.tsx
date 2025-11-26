@@ -12,7 +12,7 @@ const Landing: React.FC = () => {
           <div className="text-center animate-fade-in">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
               Share Knowledge,
-              <span className="text-black dark:text-black"> Learn Together</span>
+              <span className="text-yellow-500 dark:text-yellow-400"> Learn Together</span>
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
               StudyShare is a collaborative platform where students and teachers can upload, share, and access academic resources like notes, past papers, and flashcards.
