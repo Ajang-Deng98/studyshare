@@ -1,70 +1,116 @@
-# StudyShare
-Empowering African students through collaborative learning and resource sharing
-
-## African Context
-In many African universities, students face challenges accessing quality study materials due to limited library resources, expensive textbooks, and inadequate digital infrastructure. StudyShare addresses this by creating a collaborative platform where students and teachers can freely share academic resources, fostering a community-driven approach to education that aligns with African values of ubuntu and collective learning.
+# StudyShare - DevOps Final Project
 
 ## Team Members
-- AJANG CHOL AGUER DENG - Full Stack Developer 
-- COLLINS JUNIOR - Frontend Developer  
-- LATJOR WOUN - Frontend Developer
+- AJANG CHOL AGUER DENG - Full Stack Developer & DevOps (Terraform/IaC)
+- COLLINS JUNIOR - Frontend Developer & CI/Security  
+- LATJOR WOUN - Frontend Developer & Ansible/CD
+
+## Live Application
+[Access Live App](http://studyshare-alb-1137467487.us-east-1.elb.amazonaws.com/)
 
 ## Project Overview
 StudyShare is a comprehensive web-based platform designed to democratize access to educational resources across African universities. The application enables students and educators to upload, share, and access study materials including lecture notes, past examination papers, research documents, and multimedia content.
 
-The platform promotes collaborative learning by allowing users to rate resources, provide feedback through comments, and discover high-quality materials through an intelligent search system. By leveraging modern web technologies, StudyShare creates an inclusive digital learning environment that transcends geographical and economic barriers.
+## Architecture Overview
 
-## Target Users
-- University students seeking quality study materials
-- Educators wanting to share resources with broader academic community
-- Academic institutions looking to enhance resource accessibility
-- Study groups and learning communities
+### Architecture Diagram
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Internet      │    │  Application     │    │   Private       │
+│   Gateway       │────│  Load Balancer   │────│   Subnet        │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                │                        │
+                                │                ┌───────────────┐
+                                │                │  App Server   │
+                                │                │  (Docker)     │
+                                │                └───────────────┘
+┌─────────────────┐             │                        │
+│  Public Subnet  │             │                        │
+│                 │             │                ┌───────────────┐
+│ ┌─────────────┐ │             │                │  RDS Database │
+│ │ Bastion     │ │─────────────┘                │  (PostgreSQL) │
+│ │ Host        │ │                              └───────────────┘
+│ └─────────────┘ │
+└─────────────────┘
+```
 
-## Core Features
-- **Resource Sharing**: Upload and download academic materials in multiple formats (PDF, DOCX, images, videos)
-- **Collaborative Rating System**: Community-driven quality assurance through ratings and comments
-- **Advanced Search & Filtering**: Find resources by subject, topic, course code, or uploader
-- **User Authentication**: Secure JWT-based authentication with role-based access (Student/Teacher)
-- **Responsive Design**: Mobile-friendly interface accessible on all devices
-- **File Management**: Organized storage with preview capabilities and download tracking
-- **Real-time Notifications**: Get notified when resources are commented on or rated
-- **Bookmark System**: Save favorite resources for quick access
-- **Category Management**: Organize resources by academic subjects and courses
-- **Download Analytics**: Track resource popularity and usage statistics
-- **Content Moderation**: Report inappropriate content and admin review system
-- **Offline Access**: Download resources for offline studying
-- **Multi-language Support**: Interface available in English, French, and Swahili
-- **Dark/Light Theme**: Toggle between themes for comfortable viewing
+### Component Description
+- **VPC**: Private network (10.0.0.0/16) with DNS support
+- **Public Subnet**: Hosts bastion host and ALB for internet access
+- **Private Subnet**: Contains application server for security
+- **Bastion Host**: SSH jumpbox for secure server access
+- **Application Load Balancer**: Distributes traffic with health checks
+- **EC2 Instance**: Runs containerized application
+- **RDS PostgreSQL**: Managed database with automated backups
+- **ECR**: Private container registry for Docker images
+- **Security Groups**: Network-level firewall rules
 
 ## Technology Stack
-- **Backend**: Django REST Framework (Python)
-- **Frontend**: React + TypeScript + Tailwind CSS
-- **Database**: PostgreSQL
-- **Authentication**: JWT (JSON Web Tokens)
-- **File Storage**: Local file system with download API
-- **Caching**: Redis for session management
-- **Search Engine**: Elasticsearch for advanced search capabilities
-- **File Processing**: Celery for background tasks
-- **API Documentation**: Swagger/OpenAPI
-- **Testing**: Jest (Frontend), Pytest (Backend)
-- **Deployment**: Docker, Nginx, Gunicorn
-- **Monitoring**: Sentry for error tracking
-- **Other**: Axios for API calls, React Router for navigation
+- **Cloud Provider**: AWS
+- **Application**: Django REST API + React Frontend
+- **Database**: PostgreSQL (RDS)
+- **Container Registry**: ECR
+- **IaC**: Terraform
+- **Config Management**: Ansible
+- **CI/CD**: GitHub Actions
+
+## Repository Structure
+```
+studyshare/
+├── terraform/           # Infrastructure as Code
+│   ├── main.tf         # Provider and backend configuration
+│   ├── variables.tf    # Input variables
+│   ├── outputs.tf      # Output values
+│   ├── network.tf      # VPC, subnets, routing
+│   ├── compute.tf      # EC2, ALB, target groups
+│   ├── database.tf     # RDS configuration
+│   ├── security.tf     # Security groups
+│   └── registry.tf     # ECR repositories
+├── ansible/            # Configuration Management
+│   ├── playbook.yml    # Main deployment playbook
+│   ├── inventory.yml   # Server inventory
+│   └── templates/      # Configuration templates
+├── .github/workflows/  # CI/CD Pipelines
+│   └── cd.yml         # Combined CI/CD workflow
+├── frontend/           # React Application
+├── backend/            # Django API
+└── docker-compose.yml  # Local development
+```
 
 ## Getting Started
 
 ### Prerequisites
-- Python 3.8+
-- Node.js 16+
-- PostgreSQL 12+
-- Git
+- AWS account with appropriate permissions
+- Terraform installed
+- Ansible installed
+- GitHub account
+- Python 3.8+ (for local development)
+- Node.js 16+ (for local development)
+- PostgreSQL 12+ (for local development)
 
-### Installation
+### Deployment Steps
+1. Clone the repository
+2. Configure Terraform variables in `terraform/variables.tf`
+3. Initialize and apply Terraform:
+   ```bash
+   cd terraform
+   terraform init
+   terraform apply
+   ```
+4. Configure GitHub Secrets:
+   - AWS_ACCESS_KEY_ID
+   - AWS_SECRET_ACCESS_KEY
+   - SSH_PRIVATE_KEY
+   - BASTION_PUBLIC_IP
+   - APP_SERVER_PRIVATE_IP
+   - DB_HOST, DB_USER, DB_PASSWORD
+5. Push to main branch to trigger deployment
 
+### Local Development
 1. **Clone the repository**
    ```bash
    git clone [your-repo-url]
-   cd formative_1_group3
+   cd studyshare
    ```
 
 2. **Backend Setup**
@@ -72,167 +118,68 @@ The platform promotes collaborative learning by allowing users to rate resources
    cd backend
    python -m venv venv
    venv\Scripts\activate  # Windows
-   # source venv/bin/activate  # Mac/Linux
    pip install -r requirements.txt
-   ```
-
-3. **Database Setup**
-   ```bash
-   python manage.py makemigrations
    python manage.py migrate
    python manage.py createsuperuser
    ```
 
-4. **Frontend Setup**
-   ```bash
-   cd ../frontend
-   npm install
-   ```
-
-### Run the application
-
-1. **Start Backend Server**
-   ```bash
-   cd backend
-   python manage.py runserver
-   ```
-
-2. **Start Frontend Server**
+3. **Frontend Setup**
    ```bash
    cd frontend
+   npm install
    npm start
    ```
 
-3. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8000/api/
-   - Admin Panel: http://localhost:8000/admin/
-
-## Usage
-
-1. **Registration**: Create account as Student or Teacher
-2. **Upload Resources**: Share study materials with title, description, and tags
-3. **Search & Download**: Find resources using filters and download files
-4. **Rate & Comment**: Provide feedback on resource quality
-5. **Profile Management**: View uploaded resources and manage account
-
-## Project Structure
-```
-formative_1_group3/
-├── backend/
-│   ├── studyshare/          # Django project settings
-│   ├── api/                 # Main API application
-│   │   ├── models.py        # Database models
-│   │   ├── views.py         # API endpoints
-│   │   ├── serializers.py   # Data serialization
-│   │   └── urls.py          # URL routing
-│   ├── media/               # Uploaded files
-│   └── requirements.txt     # Python dependencies
-├── frontend/
-│   ├── src/
-│   │   ├── components/      # Reusable React components
-│   │   ├── pages/           # Page components
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── types/           # TypeScript interfaces
-│   │   └── utils/           # Utility functions
-│   ├── public/              # Static assets
-│   └── package.json         # Node.js dependencies
-└── README.md
-```
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register/` - User registration
-- `POST /api/auth/login/` - User login
-- `POST /api/auth/logout/` - User logout
-- `GET /api/auth/profile/` - Get user profile
-
-### Resources
-- `GET /api/resources/` - List all resources
-- `POST /api/resources/` - Upload new resource
-- `GET /api/resources/{id}/` - Get resource details
-- `PUT /api/resources/{id}/` - Update resource
-- `DELETE /api/resources/{id}/` - Delete resource
-- `POST /api/resources/{id}/rate/` - Rate resource
-- `GET /api/resources/search/` - Search resources
-
-## Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
-
-### Code Style
-- Follow PEP 8 for Python code
-- Use ESLint and Prettier for JavaScript/TypeScript
-- Write meaningful commit messages
-- Add tests for new features
-
-## Testing
-
-### Backend Tests
+### Tearing Down
 ```bash
-cd backend
-python manage.py test
+cd terraform
+terraform destroy
 ```
 
-### Frontend Tests
-```bash
-cd frontend
-npm test
-```
+## CI/CD Pipeline
 
-## Deployment
+### CI Pipeline
+- **Triggers on**: Pull Requests
+- **Steps**:
+  1. Checkout code
+  2. Setup Terraform
+  3. Run security scans (Trivy + tfsec)
+  4. Terraform format check
+  5. Terraform validation
+- **Security scans**: 
+  - Trivy: Container and filesystem vulnerability scanning
+  - tfsec: Infrastructure security analysis
+  - Fails build on critical vulnerabilities
 
-### Production Setup
-1. Set environment variables in `.env`
-2. Configure PostgreSQL database
-3. Set up Redis for caching
-4. Configure Nginx for static files
-5. Use Gunicorn for WSGI server
+### CD Pipeline
+- **Triggers on**: Merge to main branch
+- **Deployment process**:
+  1. Run all CI checks
+  2. Build and push Docker image to ECR
+  3. Configure SSH access through bastion
+  4. Execute Ansible playbook for deployment
+  5. Verify application health
 
-### Environment Variables
-```bash
-DEBUG=False
-SECRET_KEY=your-secret-key
-DATABASE_URL=postgresql://user:pass@localhost/dbname
-REDIS_URL=redis://localhost:6379
-ALLOWED_HOSTS=yourdomain.com
-```
+## Security Measures
+- **Vulnerability Scanning**: Trivy scans for critical CVEs in containers and dependencies
+- **Infrastructure Security**: tfsec validates Terraform for security best practices
+- **Network Security**: Private subnets, security groups with least privilege access
+- **Access Control**: Bastion host for SSH access, no direct internet access to app servers
+- **Secret Management**: GitHub Secrets for sensitive data, no hardcoded credentials
 
-## Troubleshooting
+## Challenges & Solutions
 
-### Common Issues
-- **CORS errors**: Check CORS settings in Django settings
-- **File upload fails**: Verify MEDIA_ROOT and file permissions
-- **Database connection**: Ensure PostgreSQL is running
-- **Frontend build fails**: Clear node_modules and reinstall
+### Challenge 1: Infrastructure as Code Implementation
+**Problem**: Designing modular Terraform configuration for complete AWS infrastructure including VPC, EC2, RDS, ALB, and ECR while ensuring all components work together
+**Solution**: Created separate .tf files for each component (network.tf, compute.tf, database.tf, security.tf, registry.tf) with proper variable management and outputs for seamless integration
 
-## Roadmap
+### Challenge 2: DevSecOps Integration with Build Failure Logic
+**Problem**: Implementing security scanning that automatically fails CI pipeline on critical vulnerabilities while maintaining deployment efficiency
+**Solution**: Integrated Trivy and tfsec scans with JSON output parsing to count critical vulnerabilities and exit with code 1, ensuring no vulnerable code reaches production
 
-- [ ] Mobile app development (React Native)
-- [ ] AI-powered resource recommendations
-- [ ] Integration with university LMS systems
-- [ ] Video streaming capabilities
-- [ ] Collaborative study rooms
-- [ ] Gamification features
-- [ ] Multi-university network
-
-## Links
-- [Project Repository](https://github.com/Ajang-Deng98/studyshare)
-- [API Documentation](API_Documentation.md)
-- [Setup Guide](setup.md)
-- [Live Demo](https://studyshare-demo.com)
-- [Bug Reports](https://github.com/Ajang-Deng98/studyshare/issues)
+### Challenge 3: Automated Git-to-Production Workflow
+**Problem**: Creating fully automated deployment pipeline that triggers on main branch merge and deploys through bastion host using Ansible
+**Solution**: Implemented GitHub Actions workflow with ECR authentication, SSH configuration through bastion, and Ansible playbook execution for zero-touch deployment
 
 ## License
 MIT License
-
-## Acknowledgments
-- African Development Bank for inspiration
-- Open source community for tools and libraries
-- Beta testers from various African universities
-- Contributors and maintainers

@@ -1,0 +1,189 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security-and-quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
+    
+    - name: Run security scans
+      run: |
+        # Install and run tfsec
+        wget -q https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64 -O tfsec
+        chmod +x tfsec
+        ./tfsec terraform/ --format json --out tfsec-results.json || echo "tfsec completed"
+        
+        # Run Trivy filesystem scan
+        docker run --rm -v "$PWD:/workspace" aquasec/trivy:latest fs /workspace --format json --output trivy-results.json
+        
+        # Check for critical vulnerabilities
+        if [ -f "trivy-results.json" ]; then
+          CRITICAL_COUNT=$(cat trivy-results.json | jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length')
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "❌ Found $CRITICAL_COUNT critical vulnerabilities!"
+            exit 1
+          fi
+        fi
+    
+    - name: Lint Terraform
+      run: |
+        cd terraform
+        terraform fmt -check || (echo "Terraform files need formatting" && exit 1)
+    
+    - name: Validate Terraform
+      run: |
+        cd terraform
+        terraform init -backend=false
+        terraform validate
+
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: security-and-quality
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
+    
+    - name: Run security scans
+      run: |
+        # Install and run tfsec
+        wget -q https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64 -O tfsec
+        chmod +x tfsec
+        ./tfsec terraform/ --format json --out tfsec-results.json || echo "tfsec completed"
+        
+        # Run Trivy filesystem scan
+        docker run --rm -v "$PWD:/workspace" aquasec/trivy:latest fs /workspace --format json --output trivy-results.json
+        
+        # Check for critical vulnerabilities
+        if [ -f "trivy-results.json" ]; then
+          CRITICAL_COUNT=$(cat trivy-results.json | jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length')
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "❌ Found $CRITICAL_COUNT critical vulnerabilities!"
+            exit 1
+          fi
+        fi
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+    
+    - name: Build and push Docker image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: studyshare-app
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build combined image
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+        
+        # Push images
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+    
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        
+        # Validate required secrets
+        if [ -z "${{ secrets.BASTION_PUBLIC_IP }}" ] || [ -z "${{ secrets.APP_SERVER_PRIVATE_IP }}" ]; then
+          echo "Error: BASTION_PUBLIC_IP and APP_SERVER_PRIVATE_IP secrets must be set"
+          exit 1
+        fi
+        
+        # Add SSH config for bastion host
+        cat > ~/.ssh/config << EOF
+        Host bastion
+          HostName ${{ secrets.BASTION_PUBLIC_IP }}
+          User ubuntu
+          IdentityFile ~/.ssh/id_rsa
+          StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
+        
+        Host app_server
+          HostName ${{ secrets.APP_SERVER_PRIVATE_IP }}
+          User ubuntu
+          IdentityFile ~/.ssh/id_rsa
+          ProxyJump bastion
+          StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
+        EOF
+        
+        echo "SSH config created:"
+        cat ~/.ssh/config
+    
+    - name: Install Ansible
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ansible
+    
+    - name: Create dynamic inventory
+      run: |
+        cd ansible
+        cat > inventory.yml << EOF
+        all:
+          children:
+            app_servers:
+              hosts:
+                app_server:
+                  ansible_host: app_server
+                  ansible_user: ubuntu
+                  ansible_ssh_private_key_file: ~/.ssh/id_rsa
+        EOF
+    
+    - name: Create Ansible variables
+      run: |
+        cd ansible
+        cat > deploy_vars.yml << EOF
+        ecr_repository_url: "${{ steps.login-ecr.outputs.registry }}/studyshare-app"
+        app_version: "latest"
+        aws_region: "us-east-1"
+        db_host: "${{ secrets.DB_HOST }}"
+        db_name: "studyshare"
+        db_user: "${{ secrets.DB_USER }}"
+        db_password: "${{ secrets.DB_PASSWORD }}"
+        vault_secret_key: "${{ secrets.SECRET_KEY }}"
+        aws_access_key_id: "${{ secrets.AWS_ACCESS_KEY_ID }}"
+        aws_secret_access_key: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+        EOF
+    
+    - name: Deploy with Ansible
+      run: |
+        cd ansible
+        ansible-playbook -i inventory.yml playbook.yml -e @deploy_vars.yml -v
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    
+    - name: Deployment completed
+      run: |
+        echo "✅ Deployment completed successfully!"
+        echo "Application should be available at: http://${{ secrets.LOAD_BALANCER_DNS }}"
+        echo "Note: It may take a few minutes for the application to fully start"

@@ -1,0 +1,48 @@
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/*.tfvars
+
+# Keys
+*.pem
+studyshare-key*.pem
+
+# Environment files
+.env
+.env.local
+.env.example
+backend/.env.example
+
+# Node modules
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Build outputs
+build/
+dist/
