@@ -1,4 +1,4 @@
-# StudyShare - DevOps Final Project
+# StudyShare - DevOps Summative Final Project
 
 ## Team Members
 - AJANG CHOL AGUER DENG - Full Stack Developer & DevOps (Terraform/IaC)
