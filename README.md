@@ -1,9 +1,9 @@
 # StudyShare - DevOps Final Project
 
 ## Team Members
-- Team Member 1 (Role: Terraform/IaC)
-- Team Member 2 (Role: Ansible/CD)
-- Team Member 3 (Role: CI/Security)
+- Ajang Chol Aguer Deng Terraform/IaC
+- Latjor Dak Ansible/CD
+- Collins Junior CI/Security
 
 ## Live Application
 [Access Live App](http://studyshare-alb-1137467487.us-east-1.elb.amazonaws.com/)
