@@ -1,9 +1,9 @@
 # StudyShare - DevOps Summative Final Project
 
-## TEAM Members
-- AJANG CHOL AGUER DENG - Full Stack Developer & DevOps (Terraform/IaC)
-- COLLINS JUNIOR - Frontend Developer & CI/Security  
-- LATJOR WOUN - Frontend Developer & Ansible/CD
+## The Team Members
+- Ajang Chol Aguer Deng Terraform/IaC
+- Latjor Dak Ansible/CD
+- Collins Junior CI/Security
 
 ## Live Application
 [Access Live App](http://studyshare-alb-1137467487.us-east-1.elb.amazonaws.com/)
