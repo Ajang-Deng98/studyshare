@@ -54,16 +54,5 @@ EXPOSE 80 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost/ || exit 1
 
-# Start script
-COPY <<EOF /app/start.sh
-#!/bin/bash
-python manage.py collectstatic --noinput
-python manage.py migrate
-python manage.py runserver 0.0.0.0:8000 &
-nginx -g 'daemon off;'
-EOF
-
-RUN chmod +x /app/start.sh
-
 # Start application
-CMD ["/app/start.sh"]
+CMD ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py migrate && python manage.py runserver 0.0.0.0:8000 & nginx -g 'daemon off;'"]
