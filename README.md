@@ -5,6 +5,9 @@
 - Latjor Dak Ansible/CD
 - Collins Junior CI/Security
 
+## Collins Workspace Update
+Updated infrastructure configuration for enhanced deployment pipeline.
+
 ## Live Application
 [Access Live App](http://studyshare-alb-1137467487.us-east-1.elb.amazonaws.com/)
 
