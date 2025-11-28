@@ -2,7 +2,8 @@ services:
   app:
     image: studyshare-app:latest
     ports:
-      - "80:8000"
+      - "80:80"
+      - "8000:8000"
     environment:
       - DEBUG=False
       - DB_HOST={{ db_host }}
@@ -14,8 +15,8 @@ services:
       - ALLOWED_HOSTS=*
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 60s
+      retries: 3
+      start_period: 40s

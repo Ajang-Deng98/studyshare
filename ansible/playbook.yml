@@ -256,7 +256,20 @@
       register: start_result
       failed_when: start_result.rc != 0
 
-    - name: Wait for frontend to be ready
+    - name: Check container health and restart if needed
+      shell: |
+        cd {{ app_dir }}
+        sleep 10
+        if ! docker-compose ps | grep -q "Up"; then
+          echo "Container not running, restarting..."
+          docker-compose down
+          docker-compose up -d
+          sleep 20
+        fi
+      become_user: ubuntu
+      ignore_errors: yes
+
+    - name: Wait for application to be ready
       wait_for:
         port: 80
         host: localhost
@@ -267,12 +280,14 @@
       shell: |
         echo "=== Docker containers ==="
         docker ps -a
+        echo "=== Port 80 status ==="
+        netstat -tlnp | grep :80 || echo "Port 80 not listening"
         echo "=== Port 8000 status ==="
         netstat -tlnp | grep :8000 || echo "Port 8000 not listening"
         echo "=== Application logs ==="
-        docker logs studyshare-app-1 --tail 20 2>/dev/null || docker logs studyshare_app_1 --tail 20 2>/dev/null || echo "No app container found"
+        docker logs $(docker ps -q) --tail 20 2>/dev/null || echo "No containers found"
         echo "=== Test local connection ==="
-        curl -v http://localhost:8000/ || echo "Local connection failed"
+        curl -v http://localhost/ || echo "Local connection failed"
       become_user: ubuntu
       ignore_errors: yes
       register: app_status
