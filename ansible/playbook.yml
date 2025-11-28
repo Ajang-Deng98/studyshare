@@ -236,10 +236,33 @@
         sleep 10
       become_user: ubuntu
 
-    - name: Verify application is running
+    - name: Check container status and logs
       shell: |
-        docker ps
-        sleep 5
-        curl -I http://localhost/ || echo "Application starting..."
+        echo "=== Container Status ==="
+        docker ps -a
+        echo "=== Container Logs ==="
+        docker logs studyshare-app --tail 50 || echo "No logs available"
+        echo "=== Port Status ==="
+        netstat -tlnp | grep :80 || echo "Port 80 not listening"
+        netstat -tlnp | grep :8000 || echo "Port 8000 not listening"
+        echo "=== Test Connection ==="
+        curl -I http://localhost/ || echo "Connection failed"
+      become_user: ubuntu
+      ignore_errors: yes
+      register: debug_output
+
+    - name: Display debug information
+      debug:
+        var: debug_output.stdout_lines
+
+    - name: Restart container if not healthy
+      shell: |
+        cd {{ app_dir }}
+        if ! docker ps | grep -q studyshare-app; then
+          echo "Container not running, restarting..."
+          docker-compose down
+          docker-compose up -d
+          sleep 15
+        fi
       become_user: ubuntu
       ignore_errors: yes
