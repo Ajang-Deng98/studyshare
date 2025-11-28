@@ -1,6 +1,6 @@
 # StudyShare - DevOps Final Project
 
-## Team Members
+## The Team Members
 - Ajang Chol Aguer Deng Terraform/IaC
 - Latjor Dak Ansible/CD
 - Collins Junior CI/Security
