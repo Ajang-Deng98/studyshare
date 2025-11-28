@@ -21,6 +21,7 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
+    nginx \
     && rm -rf /var/lib/apt/lists/*
 
 # Set work directory
@@ -36,6 +37,9 @@ COPY backend/ ./
 # Copy built frontend
 COPY --from=frontend-build /app/frontend/build ./static/
 
+# Copy nginx configuration
+COPY frontend/nginx.conf /etc/nginx/sites-available/default
+
 # Create necessary directories and set permissions
 RUN mkdir -p media logs && \
     chown -R appuser:appuser /app
@@ -43,12 +47,23 @@ RUN mkdir -p media logs && \
 # Switch to non-root user
 USER appuser
 
-# Expose port
-EXPOSE 8000
+# Expose ports
+EXPOSE 80 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD curl -f http://localhost/ || exit 1
+
+# Start script
+COPY <<EOF /app/start.sh
+#!/bin/bash
+python manage.py collectstatic --noinput
+python manage.py migrate
+python manage.py runserver 0.0.0.0:8000 &
+nginx -g 'daemon off;'
+EOF
+
+RUN chmod +x /app/start.sh
 
 # Start application
-CMD ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+CMD ["/app/start.sh"]

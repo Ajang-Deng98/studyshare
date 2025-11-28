@@ -232,30 +232,19 @@
     - name: Start application
       shell: |
         cd {{ app_dir }}
-        docker-compose -f docker-compose.yml up -d --remove-orphans
+        docker-compose up -d
       become_user: ubuntu
 
-    - name: Wait for frontend to be ready
+    - name: Wait for application to be ready
       wait_for:
         port: 80
         host: localhost
-        delay: 15
-        timeout: 120
+        delay: 30
+        timeout: 300
 
     - name: Verify application is running
       shell: |
-        echo "=== Docker containers ==="
-        docker ps -a
-        echo "=== Port 80 status ==="
-        netstat -tlnp | grep :80 || echo "Port 80 not listening"
-        echo "=== Application logs ==="
-        docker logs $(docker ps -q) --tail 20 2>/dev/null || echo "No containers found"
-        echo "=== Test local connection ==="
-        curl -v http://localhost/ || echo "Local connection failed"
+        docker ps
+        curl -I http://localhost/ || echo "Application not responding"
       become_user: ubuntu
       ignore_errors: yes
-      register: app_status
-
-    - name: Display application status
-      debug:
-        var: app_status.stdout_lines
