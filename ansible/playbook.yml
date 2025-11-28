@@ -227,11 +227,34 @@
         AWS_DEFAULT_REGION: "{{ aws_region }}"
       ignore_errors: yes
 
+    - name: Debug before starting application
+      shell: |
+        cd {{ app_dir }}
+        echo "=== Current directory ==="
+        pwd
+        echo "=== Docker images ==="
+        docker images | grep studyshare || echo "No studyshare images found"
+        echo "=== Docker-compose file ==="
+        cat docker-compose.yml
+        echo "=== Docker-compose config test ==="
+        docker-compose -f docker-compose.yml config
+      become_user: ubuntu
+      register: debug_before_start
+      ignore_errors: yes
+
+    - name: Display debug before start
+      debug:
+        var: debug_before_start.stdout_lines
+
     - name: Start application
       shell: |
         cd {{ app_dir }}
+        echo "Starting application with docker-compose..."
         docker-compose -f docker-compose.yml up -d --remove-orphans
+        echo "Application started successfully"
       become_user: ubuntu
+      register: start_result
+      failed_when: start_result.rc != 0
 
     - name: Wait for frontend to be ready
       wait_for:
