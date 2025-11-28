@@ -1,4 +1,4 @@
-# StudyShare - DevOps Final Project
+# StudyShare - DevOps Summative Final Project
 
 ## The Team Members
 - Ajang Chol Aguer Deng Terraform/IaC
@@ -7,6 +7,9 @@
 
 ## Live Application
 [Access Live App](http://studyshare-alb-1137467487.us-east-1.elb.amazonaws.com/)
+
+## Project Overview
+StudyShare is a comprehensive web-based platform designed to democratize access to educational resources across African universities. The application enables students and educators to upload, share, and access study materials including lecture notes, past examination papers, research documents, and multimedia content.
 
 ## Architecture Overview
 
@@ -74,13 +77,16 @@ studyshare/
 └── docker-compose.yml  # Local development
 ```
 
-## Setup Instructions
+## Getting Started
 
 ### Prerequisites
 - AWS account with appropriate permissions
 - Terraform installed
 - Ansible installed
 - GitHub account
+- Python 3.8+ (for local development)
+- Node.js 16+ (for local development)
+- PostgreSQL 12+ (for local development)
 
 ### Deployment Steps
 1. Clone the repository
@@ -99,6 +105,30 @@ studyshare/
    - APP_SERVER_PRIVATE_IP
    - DB_HOST, DB_USER, DB_PASSWORD
 5. Push to main branch to trigger deployment
+
+### Local Development
+1. **Clone the repository**
+   ```bash
+   git clone [your-repo-url]
+   cd studyshare
+   ```
+
+2. **Backend Setup**
+   ```bash
+   cd backend
+   python -m venv venv
+   venv\Scripts\activate  # Windows
+   pip install -r requirements.txt
+   python manage.py migrate
+   python manage.py createsuperuser
+   ```
+
+3. **Frontend Setup**
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
 
 ### Tearing Down
 ```bash
@@ -150,9 +180,6 @@ terraform destroy
 ### Challenge 3: Automated Git-to-Production Workflow
 **Problem**: Creating fully automated deployment pipeline that triggers on main branch merge and deploys through bastion host using Ansible
 **Solution**: Implemented GitHub Actions workflow with ECR authentication, SSH configuration through bastion, and Ansible playbook execution for zero-touch deployment
-
-## Video Demo
-[Watch Demo Video - Git-to-Production Workflow](https://your-video-link-here)
 
 ## License
 MIT License
