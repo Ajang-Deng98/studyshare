@@ -1,10 +1,12 @@
 services:
   backend:
-    image: studyshare-app:latest
+    build:
+      context: ./studyshare/backend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
-      - DEBUG=False
+      - DEBUG=True
       - DB_HOST={{ db_host }}
       - DB_NAME={{ db_name }}
       - DB_USER={{ db_user }}
@@ -24,7 +26,9 @@ services:
       start_period: 60s
 
   frontend:
-    image: studyshare-app:latest
+    build:
+      context: ./studyshare/frontend
+      dockerfile: Dockerfile
     ports:
       - "80:80"
     environment:
@@ -32,5 +36,3 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
-    command: >
-      sh -c "nginx -g 'daemon off;'"
