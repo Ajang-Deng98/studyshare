@@ -3,7 +3,7 @@ FROM node:18-alpine AS frontend-build
 
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install
 COPY frontend/ ./
 RUN TSC_COMPILE_ON_ERROR=true GENERATE_SOURCEMAP=false npm run build
 
