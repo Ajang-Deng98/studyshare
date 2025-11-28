@@ -208,6 +208,16 @@
 
 
 
+    - name: Pull application images from ECR
+      shell: |
+        docker pull {{ ecr_repository_url }}:{{ app_version }}
+        docker tag {{ ecr_repository_url }}:{{ app_version }} studyshare-app:latest
+      become_user: ubuntu
+      environment:
+        AWS_ACCESS_KEY_ID: "{{ aws_access_key_id }}"
+        AWS_SECRET_ACCESS_KEY: "{{ aws_secret_access_key }}"
+        AWS_DEFAULT_REGION: "{{ aws_region }}"
+
     - name: Stop existing containers
       shell: |
         cd {{ app_dir }}
@@ -236,12 +246,12 @@
       shell: |
         echo "=== Docker containers ==="
         docker ps -a
-        echo "=== Port 8000 status ==="
-        netstat -tlnp | grep :8000 || echo "Port 8000 not listening"
+        echo "=== Port 80 status ==="
+        netstat -tlnp | grep :80 || echo "Port 80 not listening"
         echo "=== Application logs ==="
-        docker logs studyshare-app-1 --tail 20 2>/dev/null || docker logs studyshare_app_1 --tail 20 2>/dev/null || echo "No app container found"
+        docker logs $(docker ps -q) --tail 20 2>/dev/null || echo "No containers found"
         echo "=== Test local connection ==="
-        curl -v http://localhost:8000/ || echo "Local connection failed"
+        curl -v http://localhost/ || echo "Local connection failed"
       become_user: ubuntu
       ignore_errors: yes
       register: app_status
