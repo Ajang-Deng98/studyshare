@@ -41,11 +41,9 @@ COPY --from=frontend-build /app/frontend/build ./static/
 COPY frontend/nginx.conf /etc/nginx/sites-available/default
 
 # Create necessary directories and set permissions
-RUN mkdir -p media logs && \
-    chown -R appuser:appuser /app
-
-# Switch to non-root user
-USER appuser
+RUN mkdir -p media logs /var/lib/nginx/body /var/log/nginx && \
+    chown -R appuser:appuser /app && \
+    chmod 755 /var/lib/nginx/body /var/log/nginx
 
 # Expose ports
 EXPOSE 80 8000
@@ -54,5 +52,5 @@ EXPOSE 80 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost/ || exit 1
 
-# Start application
-CMD ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py migrate && python manage.py runserver 0.0.0.0:8000 & nginx -g 'daemon off;'"]
+# Start application (run as root for nginx, but Django runs as appuser)
+CMD ["sh", "-c", "su appuser -c 'python manage.py collectstatic --noinput && python manage.py migrate && python manage.py runserver 0.0.0.0:8000' & nginx -g 'daemon off;'"]
