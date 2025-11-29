@@ -264,11 +264,18 @@
       become: yes
       ignore_errors: yes
 
+    - name: Kill whatever is using port 80
+      shell: |
+        fuser -k 80/tcp || true
+        sleep 2
+      become: yes
+      ignore_errors: yes
+
     - name: Start application
       shell: |
         docker stop studyshare-app || true
         docker rm studyshare-app || true
-        docker run -d --name studyshare-app --network host \
+        docker run -d --name studyshare-app -p 80:80 \
           -e DEBUG=False \
           -e DB_HOST="{{ db_host }}" \
           -e DB_NAME="studyshare" \
