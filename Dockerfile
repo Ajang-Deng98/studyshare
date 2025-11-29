@@ -5,10 +5,13 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
-RUN TSC_COMPILE_ON_ERROR=true GENERATE_SOURCEMAP=false npm run build
 
-# Debug: Check if build was created
-RUN echo "=== Build directory contents ===" && ls -la /app/frontend/build/ || echo "Build directory not found"
+# Build React app with error handling
+RUN npm run build || (echo "React build failed!" && exit 1)
+
+# Debug: Verify build was created
+RUN echo "=== Build directory contents ===" && ls -la /app/frontend/build/ && \
+    echo "=== Build files ===" && find /app/frontend/build -type f | head -10
 
 # Production backend stage
 FROM python:3.11-slim
