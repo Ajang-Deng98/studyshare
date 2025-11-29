@@ -34,11 +34,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ ./
 
-# Copy built frontend
-COPY --from=frontend-build /app/frontend/build ./static/
+# Copy built frontend to nginx directory
+COPY --from=frontend-build /app/frontend/build /usr/share/nginx/html/
 
 # Copy nginx configuration
-COPY frontend/nginx.conf /etc/nginx/sites-available/default
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Remove default nginx config
+RUN rm -f /etc/nginx/sites-enabled/default
 
 # Create necessary directories and set permissions
 RUN mkdir -p media logs /var/lib/nginx/body /var/log/nginx && \
