@@ -2,9 +2,9 @@
 StudyShare Web
 
 ## Team Members
-Ajang Chol Aguer Deng (Role: Terraform / IaC / AWS ECR / Ansible /)
-Latjor Dak (Role: Ansible / CD)
-Collins Junior (Role: CI / Security)
+- Ajang Chol Aguer Deng (Role: Terraform / IaC / AWS ECR / Ansible /)
+- Latjor Dak (Role: Ansible / CD)
+- Collins Junior (Role: CI / Security)
 
 ## Live Application
 Access Live App: http://studyshare-alb-1137467487.us-east-1.elb.amazonaws.com/
