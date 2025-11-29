@@ -236,7 +236,20 @@
       ignore_errors: yes
 
     - name: Start application
-      shell: docker run -d --name studyshare-app --network host -e DEBUG=False -e DB_HOST={{ db_host }} -e DB_NAME={{ db_name }} -e DB_USER={{ db_user }} -e DB_PASSWORD={{ db_password }} -e DB_PORT=5432 -e SECRET_KEY={{ vault_secret_key }} -e ALLOWED_HOSTS=* studyshare-app:latest
+      docker_container:
+        name: studyshare-app
+        image: studyshare-app:latest
+        state: started
+        network_mode: host
+        env:
+          DEBUG: "False"
+          DB_HOST: "{{ db_host }}"
+          DB_NAME: "{{ db_name }}"
+          DB_USER: "{{ db_user }}"
+          DB_PASSWORD: "{{ db_password }}"
+          DB_PORT: "5432"
+          SECRET_KEY: "{{ vault_secret_key }}"
+          ALLOWED_HOSTS: "*"
       become_user: ubuntu
 
     - name: Check container status and logs
