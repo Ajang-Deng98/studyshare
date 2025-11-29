@@ -226,14 +226,10 @@
 
     - name: Aggressive Docker cleanup
       shell: |
-        # Stop all containers
         docker stop $(docker ps -aq) || true
         docker rm $(docker ps -aq) || true
-        # Remove all networks except default ones
-        docker network ls --format "{{.Name}}" | grep -v "bridge\|host\|none" | xargs -r docker network rm || true
-        # System cleanup
+        docker network ls --format "table {{.Name}}" | grep -v "bridge\|host\|none" | xargs -r docker network rm || true
         docker system prune -af --volumes || true
-        # Restart Docker daemon
         systemctl restart docker
         sleep 10
       become: yes
@@ -242,8 +238,7 @@
     - name: Start application
       shell: |
         cd {{ app_dir }}
-        # Try docker-compose first
-        docker-compose up -d || {
+        if ! docker-compose up -d; then
           echo "Docker-compose failed, running container directly"
           docker run -d --name studyshare-app --network host \
             -e DEBUG=False \
@@ -255,7 +250,7 @@
             -e SECRET_KEY={{ vault_secret_key }} \
             -e ALLOWED_HOSTS=* \
             studyshare-app:latest
-        }
+        fi
         sleep 10
       become_user: ubuntu
 
