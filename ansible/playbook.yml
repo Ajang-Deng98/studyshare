@@ -264,18 +264,11 @@
       become: yes
       ignore_errors: yes
 
-    - name: Kill whatever is using port 80
-      shell: |
-        fuser -k 80/tcp || true
-        sleep 2
-      become: yes
-      ignore_errors: yes
-
     - name: Start application
       shell: |
         docker stop studyshare-app || true
         docker rm studyshare-app || true
-        docker run -d --name studyshare-app -p 80:80 \
+        docker run -d --name studyshare-app --network host \
           -e DEBUG=False \
           -e DB_HOST="{{ db_host }}" \
           -e DB_NAME="studyshare" \
@@ -295,14 +288,14 @@
         docker ps -a
         echo "=== Container Logs ==="
         docker logs studyshare-app --tail 100 || echo "No logs available"
-        echo "=== Container Processes ==="
-        docker exec studyshare-app ps aux || echo "Cannot check processes"
-        echo "=== Container Port Check ==="
-        docker exec studyshare-app netstat -tlnp || echo "netstat not available"
+        echo "=== Check nginx files in container ==="
+        docker exec studyshare-app ls -la /usr/share/nginx/html/ || echo "Cannot check nginx files"
+        echo "=== Check nginx config ==="
+        docker exec studyshare-app cat /etc/nginx/conf.d/default.conf || echo "Cannot check nginx config"
         echo "=== Test Connection ==="
         curl -I http://localhost/ || echo "Connection failed"
-        echo "=== What's on port 80 ==="
-        ss -tlnp | grep :80 || echo "Nothing on port 80"
+        echo "=== Test React App ==="
+        curl http://localhost/ | head -20 || echo "Cannot get page content"
       become_user: ubuntu
       ignore_errors: yes
       register: debug_output
