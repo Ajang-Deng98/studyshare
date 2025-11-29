@@ -206,7 +206,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({ fileUrl, fileName, title, res
     </div>
   );
 
-  const renderTextPreview = () => {
+  const TextPreviewComponent = () => {
     const [textContent, setTextContent] = useState<string>('');
     const [loadingText, setLoadingText] = useState(false);
     const [textError, setTextError] = useState(false);
@@ -286,6 +286,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({ fileUrl, fileName, title, res
     );
   };
 
+  const renderTextPreview = () => <TextPreviewComponent />;
+
   const renderDocumentPreview = () => (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <div className="flex items-center justify-between p-4 bg-gray-50 border-b">
@@ -359,7 +361,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({ fileUrl, fileName, title, res
       case 'audio':
         return renderAudioPreview();
       case 'text':
-        return renderTextPreview();
+        return <TextPreviewComponent />;
       case 'document':
       case 'presentation':
       case 'spreadsheet':
