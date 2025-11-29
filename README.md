@@ -155,7 +155,7 @@ terraform destroy
 **Solution**: Implemented GitHub Actions workflow with ECR authentication, SSH configuration through bastion, and Ansible playbook execution for zero-touch deployment
 
 ## Video Demo
-[Watch Demo Video - Git-to-Production Workflow](https://your-video-link-here)
+[Watch Demo Video - Git-to-Production Workflow]()
 
 ## License
 MIT License
