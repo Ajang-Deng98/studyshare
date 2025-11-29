@@ -254,11 +254,13 @@
         executable: /bin/bash
       become_user: ubuntu
 
-    - name: Stop system nginx
-      shell: |
-        systemctl stop nginx || true
-        systemctl disable nginx || true
-        pkill -f nginx || true
+    - name: Remove nginx completely
+      apt:
+        name:
+          - nginx
+          - nginx-common
+        state: absent
+        purge: yes
       become: yes
       ignore_errors: yes
 
