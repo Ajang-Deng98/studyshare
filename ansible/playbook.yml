@@ -254,18 +254,19 @@
         executable: /bin/bash
       become_user: ubuntu
 
-    - name: Install nginx
-      apt:
-        name: nginx
-        state: present
-        update_cache: yes
+    - name: Stop and disable system nginx
+      shell: |
+        systemctl stop nginx || true
+        systemctl disable nginx || true
+        pkill -f nginx || true
       become: yes
+      ignore_errors: yes
 
     - name: Start application
       shell: |
         docker stop studyshare-app || true
         docker rm studyshare-app || true
-        docker run -d --name studyshare-app --network host \
+        docker run -d --name studyshare-app -p 80:80 \
           -e DEBUG=False \
           -e DB_HOST="{{ db_host }}" \
           -e DB_NAME="studyshare" \
