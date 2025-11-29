@@ -1,9 +1,14 @@
 # StudyShare - DevOps Final Project
 
-## The Team Members
-- Ajang Chol Aguer Deng Terraform/IaC
-- Latjor Dak Ansible/CD
-- Collins Junior CI/Security
+## Team Members
+- Ajang Deng: Terraform/IaC
+- Collins Junior: Ansible/CD
+- Latjor Wuon : CI/Security
+
+## Team Contributions
+- **Ajang**: Infrastructure as Code implementation with Terraform
+- **Collins**: Continuous Integration and Security scanning integration
+- **Latjor**: Configuration Management with Ansible and Continuous Deployment
 
 ## Collins Workspace Update
 Updated infrastructure configuration for enhanced deployment pipeline. Implemented comprehensive CI/CD security scanning with Trivy and tfsec integration, ensuring robust DevSecOps practices throughout the development lifecycle.
