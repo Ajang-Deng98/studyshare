@@ -1,11 +1,8 @@
-version: '3.8'
-
 services:
   app:
     image: studyshare-app:latest
     container_name: studyshare-app
-    ports:
-      - "80:80"
+    network_mode: host
     environment:
       - DEBUG=False
       - DB_HOST={{ db_host }}
