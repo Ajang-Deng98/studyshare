@@ -236,10 +236,7 @@
       ignore_errors: yes
 
     - name: Start application
-      shell: |
-        cd {{ app_dir }}
-        docker run -d --name studyshare-app --network host -e DEBUG=False -e DB_HOST={{ db_host }} -e DB_NAME={{ db_name }} -e DB_USER={{ db_user }} -e DB_PASSWORD={{ db_password }} -e DB_PORT=5432 -e SECRET_KEY={{ vault_secret_key }} -e ALLOWED_HOSTS=* studyshare-app:latest
-        sleep 10
+      shell: docker run -d --name studyshare-app --network host -e DEBUG=False -e DB_HOST={{ db_host }} -e DB_NAME={{ db_name }} -e DB_USER={{ db_user }} -e DB_PASSWORD={{ db_password }} -e DB_PORT=5432 -e SECRET_KEY={{ vault_secret_key }} -e ALLOWED_HOSTS=* studyshare-app:latest
       become_user: ubuntu
 
     - name: Check container status and logs
