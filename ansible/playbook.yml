@@ -228,7 +228,7 @@
       shell: |
         docker stop $(docker ps -aq) || true
         docker rm $(docker ps -aq) || true
-        docker network ls --format "table {{.Name}}" | grep -v "bridge\|host\|none" | xargs -r docker network rm || true
+        docker network prune -f || true
         docker system prune -af --volumes || true
         systemctl restart docker
         sleep 10
@@ -238,19 +238,7 @@
     - name: Start application
       shell: |
         cd {{ app_dir }}
-        if ! docker-compose up -d; then
-          echo "Docker-compose failed, running container directly"
-          docker run -d --name studyshare-app --network host \
-            -e DEBUG=False \
-            -e DB_HOST={{ db_host }} \
-            -e DB_NAME={{ db_name }} \
-            -e DB_USER={{ db_user }} \
-            -e DB_PASSWORD={{ db_password }} \
-            -e DB_PORT=5432 \
-            -e SECRET_KEY={{ vault_secret_key }} \
-            -e ALLOWED_HOSTS=* \
-            studyshare-app:latest
-        fi
+        docker run -d --name studyshare-app --network host -e DEBUG=False -e DB_HOST={{ db_host }} -e DB_NAME={{ db_name }} -e DB_USER={{ db_user }} -e DB_PASSWORD={{ db_password }} -e DB_PORT=5432 -e SECRET_KEY={{ vault_secret_key }} -e ALLOWED_HOSTS=* studyshare-app:latest
         sleep 10
       become_user: ubuntu
 
