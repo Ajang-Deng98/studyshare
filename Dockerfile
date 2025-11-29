@@ -7,6 +7,9 @@ RUN npm install
 COPY frontend/ ./
 RUN TSC_COMPILE_ON_ERROR=true GENERATE_SOURCEMAP=false npm run build
 
+# Debug: Check if build was created
+RUN echo "=== Build directory contents ===" && ls -la /app/frontend/build/ || echo "Build directory not found"
+
 # Production backend stage
 FROM python:3.11-slim
 
