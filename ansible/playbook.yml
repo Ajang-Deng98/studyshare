@@ -254,6 +254,14 @@
         executable: /bin/bash
       become_user: ubuntu
 
+    - name: Stop system nginx
+      shell: |
+        systemctl stop nginx || true
+        systemctl disable nginx || true
+        pkill -f nginx || true
+      become: yes
+      ignore_errors: yes
+
     - name: Start application
       shell: |
         docker stop studyshare-app || true
