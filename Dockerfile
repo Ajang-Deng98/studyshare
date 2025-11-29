@@ -3,9 +3,15 @@ FROM node:18-alpine AS frontend-build
 
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install
 COPY frontend/ ./
-RUN TSC_COMPILE_ON_ERROR=true GENERATE_SOURCEMAP=false npm run build
+
+# Build React app with error handling
+RUN npm run build || (echo "React build failed!" && exit 1)
+
+# Debug: Verify build was created
+RUN echo "=== Build directory contents ===" && ls -la /app/frontend/build/ && \
+    echo "=== Build files ===" && find /app/frontend/build -type f | head -10
 
 # Production backend stage
 FROM python:3.11-slim
@@ -21,6 +27,7 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
+    nginx \
     && rm -rf /var/lib/apt/lists/*
 
 # Set work directory
@@ -33,22 +40,35 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ ./
 
-# Copy built frontend
-COPY --from=frontend-build /app/frontend/build ./static/
+# Remove all default nginx configs first
+RUN rm -rf /etc/nginx/sites-enabled/* /etc/nginx/sites-available/* /etc/nginx/conf.d/* /usr/share/nginx/html/*
+
+# Copy built frontend to nginx directory
+COPY --from=frontend-build /app/frontend/build/ /usr/share/nginx/html/
+
+# Create fallback index.html if React build failed
+RUN if [ ! -f /usr/share/nginx/html/index.html ]; then \
+        echo '<h1>StudyShare Loading...</h1>' > /usr/share/nginx/html/index.html; \
+    fi
+
+# Copy nginx configuration
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Debug: Verify setup
+RUN echo "=== Nginx config ===" && cat /etc/nginx/conf.d/default.conf && \
+    echo "=== HTML files ===" && ls -la /usr/share/nginx/html/
 
 # Create necessary directories and set permissions
-RUN mkdir -p media logs && \
-    chown -R appuser:appuser /app
+RUN mkdir -p media logs /var/lib/nginx/body /var/log/nginx && \
+    chown -R appuser:appuser /app && \
+    chmod 755 /var/lib/nginx/body /var/log/nginx
 
-# Switch to non-root user
-USER appuser
-
-# Expose port
-EXPOSE 8000
+# Expose ports
+EXPOSE 80 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD curl -f http://localhost/ || exit 1
 
-# Start application
-CMD ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+# Start application (run as root for nginx, but Django runs as appuser)
+CMD ["sh", "-c", "su appuser -c 'python manage.py collectstatic --noinput && python manage.py migrate && python manage.py runserver 0.0.0.0:8000' & nginx -g 'daemon off;'"]
