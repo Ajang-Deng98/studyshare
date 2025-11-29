@@ -210,8 +210,14 @@
 
     - name: Pull application images from ECR
       shell: |
+        # Remove any existing images
+        docker rmi studyshare-app:latest || true
+        docker rmi {{ ecr_repository_url }}:{{ app_version }} || true
+        # Pull fresh image
         docker pull {{ ecr_repository_url }}:{{ app_version }}
         docker tag {{ ecr_repository_url }}:{{ app_version }} studyshare-app:latest
+        # Verify image
+        docker images | grep studyshare-app
       become_user: ubuntu
       environment:
         AWS_ACCESS_KEY_ID: "{{ aws_access_key_id }}"
@@ -236,7 +242,20 @@
     - name: Start application
       shell: |
         cd {{ app_dir }}
-        docker-compose up -d
+        # Try docker-compose first
+        docker-compose up -d || {
+          echo "Docker-compose failed, running container directly"
+          docker run -d --name studyshare-app --network host \
+            -e DEBUG=False \
+            -e DB_HOST={{ db_host }} \
+            -e DB_NAME={{ db_name }} \
+            -e DB_USER={{ db_user }} \
+            -e DB_PASSWORD={{ db_password }} \
+            -e DB_PORT=5432 \
+            -e SECRET_KEY={{ vault_secret_key }} \
+            -e ALLOWED_HOSTS=* \
+            studyshare-app:latest
+        }
         sleep 10
       become_user: ubuntu
 
