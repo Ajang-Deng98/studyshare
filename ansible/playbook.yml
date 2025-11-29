@@ -206,54 +206,110 @@
         path: "{{ app_dir }}/studyshare/backend/Dockerfile"
       register: backend_dockerfile
 
+
+
     - name: Pull application images from ECR
       shell: |
+        # Remove any existing images
+        docker rmi studyshare-app:latest || true
+        docker rmi {{ ecr_repository_url }}:{{ app_version }} || true
+        # Pull fresh image
         docker pull {{ ecr_repository_url }}:{{ app_version }}
         docker tag {{ ecr_repository_url }}:{{ app_version }} studyshare-app:latest
+        # Verify image
+        docker images | grep studyshare-app
       become_user: ubuntu
       environment:
         AWS_ACCESS_KEY_ID: "{{ aws_access_key_id }}"
         AWS_SECRET_ACCESS_KEY: "{{ aws_secret_access_key }}"
         AWS_DEFAULT_REGION: "{{ aws_region }}"
 
-    - name: Stop existing containers
+    - name: Aggressive Docker cleanup
       shell: |
-        cd {{ app_dir }}
-        docker-compose -f docker-compose.yml down --remove-orphans || true
-        if [ "$(docker ps -q)" ]; then docker stop $(docker ps -q); fi
-        docker system prune -f || true
+        docker stop $(docker ps -aq) || true
+        docker rm $(docker ps -aq) || true
+        docker network prune -f || true
+        docker system prune -af --volumes || true
+        systemctl restart docker
+        sleep 10
+      become: yes
+      ignore_errors: yes
+
+    - name: Login to AWS ECR
+      shell: |
+        aws ecr get-login-password --region us-east-1 | \
+        docker login --username AWS --password-stdin 436119632580.dkr.ecr.us-east-1.amazonaws.com
+      args:
+        executable: /bin/bash
       become_user: ubuntu
       environment:
+        AWS_ACCESS_KEY_ID: "{{ aws_access_key_id }}"
+        AWS_SECRET_ACCESS_KEY: "{{ aws_secret_access_key }}"
         AWS_DEFAULT_REGION: "{{ aws_region }}"
+
+    - name: Pull latest app image from ECR
+      shell: |
+        docker pull 436119632580.dkr.ecr.us-east-1.amazonaws.com/studyshare-app:latest
+      args:
+        executable: /bin/bash
+      become_user: ubuntu
+
+    - name: Stop and disable system nginx
+      shell: |
+        systemctl stop nginx || true
+        systemctl disable nginx || true
+        pkill -f nginx || true
+      become: yes
       ignore_errors: yes
 
     - name: Start application
       shell: |
-        cd {{ app_dir }}
-        docker-compose -f docker-compose.yml up -d --remove-orphans
+        docker stop studyshare-app || true
+        docker rm studyshare-app || true
+        docker run -d --name studyshare-app -p 80:80 \
+          -e DEBUG=False \
+          -e DB_HOST="{{ db_host }}" \
+          -e DB_NAME="studyshare" \
+          -e DB_USER="{{ db_user }}" \
+          -e DB_PASSWORD="{{ db_password }}" \
+          -e DB_PORT=5432 \
+          -e SECRET_KEY="{{ vault_secret_key }}" \
+          -e ALLOWED_HOSTS="*" \
+          436119632580.dkr.ecr.us-east-1.amazonaws.com/studyshare-app:latest
+      args:
+        executable: /bin/bash
       become_user: ubuntu
 
-    - name: Wait for frontend to be ready
-      wait_for:
-        port: 80
-        host: localhost
-        delay: 15
-        timeout: 120
-
-    - name: Verify application is running
+    - name: Check container status and logs
       shell: |
-        echo "=== Docker containers ==="
+        echo "=== Container Status ==="
         docker ps -a
-        echo "=== Port 8000 status ==="
-        netstat -tlnp | grep :8000 || echo "Port 8000 not listening"
-        echo "=== Application logs ==="
-        docker logs studyshare-app-1 --tail 20 2>/dev/null || docker logs studyshare_app_1 --tail 20 2>/dev/null || echo "No app container found"
-        echo "=== Test local connection ==="
-        curl -v http://localhost:8000/ || echo "Local connection failed"
+        echo "=== Container Logs ==="
+        docker logs studyshare-app --tail 100 || echo "No logs available"
+        echo "=== Check nginx files in container ==="
+        docker exec studyshare-app ls -la /usr/share/nginx/html/ || echo "Cannot check nginx files"
+        echo "=== Check nginx config ==="
+        docker exec studyshare-app cat /etc/nginx/conf.d/default.conf || echo "Cannot check nginx config"
+        echo "=== Test Connection ==="
+        curl -I http://localhost/ || echo "Connection failed"
+        echo "=== Test React App ==="
+        curl http://localhost/ | head -20 || echo "Cannot get page content"
       become_user: ubuntu
       ignore_errors: yes
-      register: app_status
+      register: debug_output
 
-    - name: Display application status
+    - name: Display debug information
       debug:
-        var: app_status.stdout_lines
+        var: debug_output.stdout_lines
+
+    - name: Restart container if not healthy
+      shell: |
+        cd {{ app_dir }}
+        if ! docker ps | grep -q studyshare-app; then
+          echo "Container not running, restarting..."
+          docker-compose down
+          docker-compose up -d
+          sleep 15
+        fi
+      become_user: ubuntu
+      ignore_errors: yes

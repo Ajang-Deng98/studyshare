@@ -52,10 +52,10 @@ resource "aws_lb_target_group" "frontend" {
     enabled             = true
     healthy_threshold   = 2
     unhealthy_threshold = 10
-    timeout             = 10
+    timeout             = 5
     interval            = 30
     path                = "/"
-    matcher             = "200,404"
+    matcher             = "200"
   }
 
   tags = {
