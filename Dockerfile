@@ -37,11 +37,15 @@ COPY backend/ ./
 # Copy built frontend to nginx directory
 COPY --from=frontend-build /app/frontend/build /usr/share/nginx/html/
 
+# Remove all default nginx configs and setup custom config
+RUN rm -rf /etc/nginx/sites-enabled/* /etc/nginx/sites-available/* /etc/nginx/conf.d/* /usr/share/nginx/html/index.html
+
 # Copy nginx configuration
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Remove default nginx config
-RUN rm -f /etc/nginx/sites-enabled/default
+# Debug: Verify setup
+RUN echo "=== Nginx config ===" && cat /etc/nginx/conf.d/default.conf && \
+    echo "=== HTML files ===" && ls -la /usr/share/nginx/html/
 
 # Create necessary directories and set permissions
 RUN mkdir -p media logs /var/lib/nginx/body /var/log/nginx && \
