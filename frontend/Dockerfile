@@ -10,10 +10,10 @@ RUN REACT_APP_API_URL=/api npm run build
 
 # Production stage
 FROM nginx:alpine
-# Remove default nginx config and html
-RUN rm -rf /etc/nginx/conf.d/default.conf /usr/share/nginx/html/*
+# Remove default nginx files
+RUN rm -rf /usr/share/nginx/html/*
 # Copy React build files
-COPY --from=build /app/build /usr/share/nginx/html
+COPY --from=build /app/build /usr/share/nginx/html/
 # Copy our custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Verify files are copied correctly
