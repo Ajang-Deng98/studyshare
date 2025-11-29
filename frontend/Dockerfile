@@ -6,7 +6,7 @@ RUN npm install
 COPY . .
 RUN REACT_APP_API_URL=/api npm run build
 
-# Production stage
+# Production stage with custom nginx config
 FROM nginx:alpine
 # Remove default nginx files
 RUN rm -rf /usr/share/nginx/html/*
