@@ -254,15 +254,12 @@
         executable: /bin/bash
       become_user: ubuntu
 
-    - name: Remove nginx completely
+    - name: Install nginx
       apt:
-        name:
-          - nginx
-          - nginx-common
-        state: absent
-        purge: yes
+        name: nginx
+        state: present
+        update_cache: yes
       become: yes
-      ignore_errors: yes
 
     - name: Start application
       shell: |
