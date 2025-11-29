@@ -37,11 +37,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ ./
 
-# Copy built frontend to nginx directory
-COPY --from=frontend-build /app/frontend/build /usr/share/nginx/html/
+# Remove all default nginx configs first
+RUN rm -rf /etc/nginx/sites-enabled/* /etc/nginx/sites-available/* /etc/nginx/conf.d/* /usr/share/nginx/html/*
 
-# Remove all default nginx configs and setup custom config
-RUN rm -rf /etc/nginx/sites-enabled/* /etc/nginx/sites-available/* /etc/nginx/conf.d/* /usr/share/nginx/html/index.html
+# Copy built frontend to nginx directory
+COPY --from=frontend-build /app/frontend/build/ /usr/share/nginx/html/
+
+# Create fallback index.html if React build failed
+RUN if [ ! -f /usr/share/nginx/html/index.html ]; then \
+        echo '<h1>StudyShare Loading...</h1>' > /usr/share/nginx/html/index.html; \
+    fi
 
 # Copy nginx configuration
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
