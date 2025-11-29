@@ -241,6 +241,7 @@
         image: studyshare-app:latest
         state: started
         network_mode: host
+        pull: false
         env:
           DEBUG: "False"
           DB_HOST: "{{ db_host }}"
