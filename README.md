@@ -6,7 +6,7 @@
 - Collins Junior CI/Security
 
 ## Collins Workspace Update
-Updated infrastructure configuration for enhanced deployment pipeline.
+Updated infrastructure configuration for enhanced deployment pipeline. Implemented comprehensive CI/CD security scanning with Trivy and tfsec integration, ensuring robust DevSecOps practices throughout the development lifecycle.
 
 ## Live Application
 [Access Live App](http://studyshare-alb-1137467487.us-east-1.elb.amazonaws.com/)
