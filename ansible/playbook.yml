@@ -239,6 +239,9 @@
       shell: |
         docker stop studyshare-app || true
         docker rm studyshare-app || true
+        if ! docker images | grep -q studyshare-app; then
+          docker tag {{ ecr_repository_url }}:{{ app_version }} studyshare-app:latest
+        fi
         docker run -d --name studyshare-app --network host \
           -e DEBUG=False \
           -e DB_HOST="{{ db_host }}" \
