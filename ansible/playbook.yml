@@ -285,12 +285,15 @@
         echo "=== Container Status ==="
         docker ps -a
         echo "=== Container Logs ==="
-        docker logs studyshare-app --tail 50 || echo "No logs available"
-        echo "=== Port Status ==="
-        netstat -tlnp | grep :80 || echo "Port 80 not listening"
-        netstat -tlnp | grep :8000 || echo "Port 8000 not listening"
+        docker logs studyshare-app --tail 100 || echo "No logs available"
+        echo "=== Container Processes ==="
+        docker exec studyshare-app ps aux || echo "Cannot check processes"
+        echo "=== Container Port Check ==="
+        docker exec studyshare-app netstat -tlnp || echo "netstat not available"
         echo "=== Test Connection ==="
         curl -I http://localhost/ || echo "Connection failed"
+        echo "=== What's on port 80 ==="
+        ss -tlnp | grep :80 || echo "Nothing on port 80"
       become_user: ubuntu
       ignore_errors: yes
       register: debug_output
